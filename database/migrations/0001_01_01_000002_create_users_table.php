@@ -14,15 +14,13 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->string('id', 100)->primary();
             $table->string('name', 255);
+            $table->string('username', 255)->unique();
             $table->string('password', 100);
             $table->string('role_id', 100);
             $table->string('profile_photo_path', 500)->nullable();
-            $table->string('nip', 20)->unique();
             $table->rememberToken();
-            $table->dateTime('created_at');
-            $table->dateTimeTz('created_at');
-            $table->unsignedBigInteger('updated_at');
-            $table->unsignedBigInteger('deleted_at')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
 
             $table->foreign('role_id')->on('roles')->references('id');
         });

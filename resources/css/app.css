@@ -148,3 +148,14 @@ html {
         @apply bg-background text-foreground;
     }
 } */
+
+@keyframes bubble-up {
+    0% {
+        transform: translateY(200dvh) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100dvh) rotate(720deg);
+        opacity: 0;
+    }
+}

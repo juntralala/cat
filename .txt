@@ -1,0 +1,2 @@
+tambahkan divisi di barang masuk.
+buat nama panggilan jadi optional

@@ -5,27 +5,25 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids;
+    use HasFactory, Notifiable, HasUuids, SoftDeletes;
 
     /**
-     * The attributes that are mass assignable.
-     *
      * @var list<string>
      */
     protected $fillable = [
         'name',
-        'nip',
+        'username',
         'role_id',
         'profile_image_path',
         'password',
     ];
-    protected $dateFormat = 'U';
 
     /**
      * The attributes that should be hidden for serialization.
@@ -36,6 +34,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+    protected $with = ['role'];
 
     /**
      * Get the attributes that should be cast.
@@ -47,5 +46,9 @@ class User extends Authenticatable
         return [
             'password' => 'hashed'
         ];
+    }
+
+    public function role() {
+        return $this->belongsTo(Role::class);
     }
 }

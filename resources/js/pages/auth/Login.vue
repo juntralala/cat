@@ -1,11 +1,65 @@
 <script setup>
-import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
+import BubbleUpLayout from '@/layouts/BubbleUpLayout.vue';
+import { useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 defineOptions({
-    layout: ApplicationLayout
+  layout: BubbleUpLayout
 });
+
+const form = useForm({
+  username: null,
+  password: null
+});
+
+const showPassword = ref(false);
+function toggleShowPassword() {
+  showPassword.value = !showPassword.value;
+}
+function login() {
+  form.post('/login', {
+    preserveScroll: true,
+    onSuccess: () => {
+      form.reset();
+    },
+  });
+}
 </script>
 
 <template>
-    Hello
+  <v-container class="h-dvh">
+    <v-row class="fill-height" align="center">
+      <v-col>
+        <v-card class="ma-auto max-w-150!">
+          <v-card-title class="text-center mt-5">
+            <v-avatar v-if="$page.props.settings.app_icon" size="128" class="mb-4">
+              <v-img :src="$page.props.settings.app_icon" />
+            </v-avatar>
+            <div v-if="$page.props.settings.app_name" class="text-blue-darken-3 text-2xl font-semibold mb-5">{{
+              $page.props.settings.app_name }}</div>
+            <div>Login</div>
+            <v-card-subtitle class="text-center">Masukkan Username dan Password Anda</v-card-subtitle>
+          </v-card-title>
+          <v-card-text>
+            <v-form @submit="login">
+              <v-text-field label="username" v-model="form.username"
+                :error-messages="form.errors.username"></v-text-field>
+              <v-text-field label="password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
+                :error-messages="form.errors.password" :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                @click:append-inner="toggleShowPassword"></v-text-field>
+            </v-form>
+          </v-card-text>
+          <v-card-actions class="justify-center mb-3">
+            <v-btn color="blue-darken-3" width="100%" variant="flat" @click="login" :loading="form.processing"
+              :disabled="form.processing">
+              <span v-if="!form.processing">Login</span>
+              <span v-else>
+                <v-progress-circular indeterminate />
+              </span>
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
