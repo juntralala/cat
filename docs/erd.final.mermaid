@@ -1,98 +1,120 @@
 ---
-title: ERD
+title: ERD Warehouse Distribution System
 config:
- theme: default
- layout: elk
+  #theme: default
+  layout: elk
 ---
 erDiagram
     roles ||--o{ users : "has"
-    items ||--o{ stocks : "has"
-    items ||--o{ transaction_details : "has"
-    measurement_units ||--o{ stocks : "uses"
-    measurement_units ||--o{ transaction_details : "uses"
+    items ||--o{ item_skus : "has"
+    item_skus ||--o{ transaction_items : "tracked in"
+    measurement_units ||--o{ transaction_items : "uses"
     recipients ||--o{ transactions : "receives"
-    transactions ||--o{ transaction_details : "contains"
+    items ||--|| measurement_units : "has base unit"
+    transactions ||--|{ transaction_items : "contains"
+    sku_measurement_unit_conversions }o--|| item_skus : "has"
+    sku_measurement_unit_conversions }o--|| measurement_units : "has"
+    users ||--o{ transactions : "perform"
 
     roles {
-        string id PK
-        string name UK
+        id VARCHAR(100) PK
+        name VARCHAR(100) UK
     }
 
     users {
-        string id PK
-        string name
-        string username UK
-        string password
-        string role_id FK
-        string profile_photo_path
-        string remember_token
-        timestamp created_at
-        timestamp updated_at
-        timestamp deleted_at
+        id VARCHAR(100) PK
+        name VARCHAR(255)
+        username VARCHAR(255) UK
+        password VARCHAR(100)
+        role_id VARCHAR(100) FK
+        profile_photo_path VARCHAR(500)
+        remember_token VARCHAR(100)
+        created_at DATETIME
+        updated_at DATETIME
+        deleted_at DATETIME
     }
 
     settings {
-        string id PK
-        string key
-        string value
+        id VARCHAR(100) PK
+        key VARCHAR(255) UK
+        value VARCHAR(255)
     }
 
+    %% mendukung konversi secara global atau per sku
     measurement_units {
-        string id PK
-        string name UK
-        timestamp created_at
-        timestamp updated_at
-        timestamp deleted_at
-    }
-
-    items {
-        string id PK
-        string name
-        timestamp created_at
-        timestamp updated_at
-        timestamp deleted_at
-    }
-
-    stocks {
-        string id PK
-        string item_id FK
-        string unit_id FK
-        integer quantity
-        timestamp created_at
-        timestamp updated_at
-        timestamp deleted_at
-    }
+        id VARCHAR(100) PK
+        name VARCHAR(255) UK
+        base_measurement_unit_id VARCHAR(100) FK "nullable"
+        conversion INTEGER "nullable"
+        is_base boolean
+        created_at DATETIME
+        updated_at DATETIME
+        deleted_at DATETIME
+    } 
 
     recipients {
-        string id PK
-        string name
-        string nickname
-        string division
-        timestamp created_at
-        timestamp updated_at
-        timestamp deleted_at
+        id VARCHAR(100) PK
+        name VARCHAR(255)
+        nickname VARCHAR(255)
+        division VARCHAR(255)
+        created_at DATETIME
+        updated_at DATETIME
+        deleted_at DATETIME
     }
 
     transactions {
-        string id PK
-        enum type "in/out"
-        string recipient_id FK
-        string supplier
-        string division
-        text notes
-        date transaction_date
-        timestamp created_at
-        timestamp updated_at
-        timestamp deleted_at
+        id VARCHAR(100) PK
+        type enum "in/out"
+        user_id VARCHAR(100) FK
+        recipient_id VARCHAR(100) FK
+        supplier VARCHAR(255) "For type=in"
+        division VARCHAR(255)
+        notes text
+        transaction_date date
+        created_at DATETIME
+        updated_at DATETIME
+        deleted_at DATETIME
     }
 
-    transaction_details {
-        string id PK
-        string transaction_id FK
-        string item_id FK
-        string unit_id FK
-        integer quantity
-        timestamp created_at
-        timestamp updated_at
-        timestamp deleted_at
+    transaction_items {
+        id VARCHAR(100) PK
+        transaction_id VARCHAR(100) FK
+        item_sku_id VARCHAR(100) FK "Track specific SKU"
+        unit_id VARCHAR(100) FK "Satuan transaksi"
+        quantity INTEGER "Jumlah dalam satuan unit_id"
+        price DECIMAL(22_4) "Harga modal per unit saat transaksi"
+        created_at DATETIME
+        updated_at DATETIME
+        deleted_at DATETIME
+    }
+
+    items {
+        id VARCHAR(100) PK
+        name VARCHAR(100)
+        description text
+        base_measurement_unit_id VARCHAR(100) FK
+        created_at DATETIME
+        updated_at DATETIME
+        deleted_at DATETIME
+    }
+
+    item_skus {
+        id VARCHAR(100) PK
+        item_id VARCHAR(100) FK
+        sku VARCHAR(100) UK "Kode SKU unik"
+        specification_name VARCHAR(100) "Merk/varian: Sidu, Paperline"
+        stock INTEGER
+        price DECIMAL(22_4)
+        created_at DATETIME
+        updated_at DATETIME
+        deleted_at DATETIME
+    }
+
+    sku_measurement_unit_conversions {
+        id VARCHAR(100)
+        measurement_unit_id VARCHAR(100) FK
+        item_sku_id VARCHAR(100) FK
+        conversion INTEGER
+        created_at DATETIME
+        updated_at DATETIME
     }
