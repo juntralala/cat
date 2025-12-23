@@ -27,3 +27,6 @@ frankenphp
 frankenphp-worker.php
 rr
 .rr.yaml
+
+*.pem
+*.crt

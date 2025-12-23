@@ -1,20 +1,21 @@
 ---
 title: ERD Warehouse Distribution System
 config:
-  #theme: default
+  theme: default
   layout: elk
 ---
 erDiagram
-    roles ||--o{ users : "has"
-    items ||--o{ item_skus : "has"
-    item_skus ||--o{ transaction_items : "tracked in"
-    measurement_units ||--o{ transaction_items : "uses"
-    recipients ||--o{ transactions : "receives"
-    items ||--|| measurement_units : "has base unit"
-    transactions ||--|{ transaction_items : "contains"
-    sku_measurement_unit_conversions }o--|| item_skus : "has"
-    sku_measurement_unit_conversions }o--|| measurement_units : "has"
-    users ||--o{ transactions : "perform"
+    roles ||--o{ users : "assigned_to"
+    items ||--o{ item_skus : "has_variants"
+    item_skus ||--o{ transaction_items : "recorded_in"
+    measurement_units ||--o{ transaction_items : "measures"
+    recipients ||--o{ transactions : "involved_in"
+    items ||--|| measurement_units : "measured_by"
+    measurement_units ||--o{ measurement_units : "derived"
+    transactions ||--|{ transaction_items : "consists_of"
+    sku_measurement_unit_conversions }o--|| item_skus : "converts_for"
+    sku_measurement_unit_conversions }o--|| measurement_units : "converts_to"
+    users ||--o{ transactions : "created_by"
 
     roles {
         id VARCHAR(100) PK
@@ -91,7 +92,7 @@ erDiagram
     items {
         id VARCHAR(100) PK
         name VARCHAR(100)
-        description text
+        %% description text
         base_measurement_unit_id VARCHAR(100) FK
         created_at DATETIME
         updated_at DATETIME
@@ -102,8 +103,8 @@ erDiagram
         id VARCHAR(100) PK
         item_id VARCHAR(100) FK
         sku VARCHAR(100) UK "Kode SKU unik"
-        specification_name VARCHAR(100) "Merk/varian: Sidu, Paperline"
-        stock INTEGER
+        specification_name VARCHAR(255) "Merk/varian: Sidu, Paperline"
+        quantity INTEGER
         price DECIMAL(22_4)
         created_at DATETIME
         updated_at DATETIME

@@ -289,7 +289,6 @@ function viewStock() {
                                 v-for="(division, index) in topDivisions" 
                                 :key="index"
                                 class="border-b"
-                                :class="index === 0 ? 'bg-blue-lighten-5' : ''"
                             >
                                 <template v-slot:prepend>
                                     <v-avatar 
@@ -309,10 +308,10 @@ function viewStock() {
                                 </v-list-item-title>
                                 
                                 <v-list-item-subtitle class="mt-1">
-                                    <v-chip color="blue" size="small" class="mr-2">
-                                        {{ formatNumber(division.transaction_count) }} transaksi
+                                    <v-chip color="blue-darken-2" variant="text" size="small" class="mr-2">
+                                        {{ formatNumber(division.transaction_count) }} pengambilan
                                     </v-chip>
-                                    <v-chip color="blue-darken-1" size="small">
+                                    <v-chip color="blue-darken-2" variant="text" size="small">
                                         {{ formatNumber(division.total_items) }} {{ division.top_item }} diambil
                                     </v-chip>
                                 </v-list-item-subtitle>

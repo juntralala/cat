@@ -11,11 +11,16 @@ class MeasurementUnitController extends Controller
     private function validateUnit(Request $request) {
         return $request->validate([
             'name' => 'required|string|max:255|unique:measurement_units,name',
-        ],[
+            'is_base' => 'required|boolean',
+            'base_measurement_unit_id' => 'exclude_if:is_base,true|nullable|exists:measurement_units,id',
+            'conversion' => 'exclude_if:is_base,true|exclude_if:base_measurement_unit_id,null|numeric|min:1',
+        ], [
             'name.required' => 'Nama satuan tidak boleh kosong',
             'name.string' => 'Tipe nama satuan data harus teks',
             'name.max' => 'Nama satuan tidak boleh lebih panjang dari 255 karakter',
             'name.unique' => 'Nama satuan ":input" sudah digunakan, gunakan nama lain',
+            'is_base.required' => 'Adalah base unit harus diisi',
+            'is_base.boolean' => 'Adalah base unit harus boolean, ":input" diterima',
         ]);
     }
 
@@ -40,9 +45,10 @@ class MeasurementUnitController extends Controller
 
     public function destroy($id) {
         $unit = MeasurementUnit::findOrFail($id);
-        $stock = $unit->stocks()->first();
-        $transaction = $unit->transactionDetails()->first();
-        if(!($stock && $transaction)) {
+        $transaction = $unit->transactionItems()->withTrashed()->exists();
+        $item = $unit->basedMeasurementUnitItems()->withTrashed()->exists();
+        $skuUnitConversion = $unit->skuMeasurementUnitConversions()->withTrashed()->exists();
+        if(!($transaction && $item && $skuUnitConversion)) {
             $unit->forceDelete();
         } else {
             $unit->delete();
@@ -54,8 +60,7 @@ class MeasurementUnitController extends Controller
     public function restore($id) {
 
         $unit = MeasurementUnit::findOrFail($id);
-        $unit->deleted_at = null;
-        $unit->save();
+        $unit->restore();
         return redirect()->back();
     }
 }

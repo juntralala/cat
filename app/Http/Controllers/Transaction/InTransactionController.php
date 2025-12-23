@@ -10,7 +10,6 @@ use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class InTransactionController extends Controller
@@ -66,7 +65,7 @@ class InTransactionController extends Controller
 
                 if ($stock) {
                     // Update stock yang sudah ada
-                    $stock->increment('quantity', $detail['quantity']);
+                    $stock->increment('quantity', amount: $detail['quantity']);
                 } else {
                     // Buat stock baru
                     Stock::create([

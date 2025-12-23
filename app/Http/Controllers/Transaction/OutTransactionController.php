@@ -29,8 +29,8 @@ class OutTransactionController extends Controller
     {
         // Validasi input
         $validated = $request->validate([
-            'recipient_id' => 'required|exists:recipients,id',
-            'division' => 'nullable|string|max:255',
+            'recipient_id' => 'required',
+            'division' => 'required|string|max:255',
             'transaction_date' => 'required|date',
             'notes' => 'nullable|string',
             'transaction_details' => 'required|array|min:1',
@@ -65,6 +65,16 @@ class OutTransactionController extends Controller
                 }
             }
 
+            // Jika penerima belum terdaftar, buat baru
+            $recipient = Recipient::find($validated['recipient_id']);
+            if($recipient === null) {
+                $recipient = Recipient::create([
+                    'name' => $validated['recipient_id'],
+                    'division' => $validated['division'] ?? null,
+                ]);
+                $validated['recipient_id'] = $recipient->id;
+            }
+
             // Buat transaksi header
             $transaction = Transaction::create([
                 'type' => 'out',
@@ -97,7 +107,7 @@ class OutTransactionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             return redirect()->back()
                 ->withErrors(['error' => $e->getMessage()])
                 ->withInput();

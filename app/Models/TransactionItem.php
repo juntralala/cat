@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class TransactionDetail extends Model
+class TransactionItem extends Model
 {
     use HasUuids, SoftDeletes;
 
-    protected $table = 'transaction_details';
+    protected $table = 'transaction_items';
 
     protected $keyType = 'string';
     
@@ -22,8 +22,9 @@ class TransactionDetail extends Model
 
     protected $fillable = [
         'transaction_id',
-        'item_id',
+        'item_sku_id',
         'unit_id',
+        'price',
         'quantity',
     ];
 
@@ -32,7 +33,7 @@ class TransactionDetail extends Model
     ];
 
     protected $with = [
-        'item',
+        'itemSku',
         'unit',
     ];
 
@@ -41,9 +42,9 @@ class TransactionDetail extends Model
         return $this->belongsTo(Transaction::class, 'transaction_id', 'id');
     }
 
-    public function item()
+    public function itemSku()
     {
-        return $this->belongsTo(Item::class, 'item_id', 'id');
+        return $this->belongsTo(Sku::class, 'sku_id', 'id');
     }
 
     public function unit()

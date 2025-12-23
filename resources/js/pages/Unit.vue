@@ -11,11 +11,15 @@ defineOptions({
 const props = defineProps({
     units: Array
 });
+const baseUnits = props.units.filter(unit => unit.is_base == true);
 
 const dialog = ref(false);
 const editingId = ref(null);
 const form = useForm({
-    name: ''
+    name: '',
+    is_base: true,
+    base_measurement_unit_id: '',
+    conversion: 1,
 });
 const errorDialog = ref(false);
 const errorMessage = ref('');
@@ -30,21 +34,45 @@ const openAddDialog = () => {
 const openEditDialog = (unit) => {
     editingId.value = unit.id;
     form.name = unit.name;
+    switch (true) {
+        case unit.is_base == true: form.is_base = true; break;
+        case unit.is_base == false && unit.base_measurement_unit_id != null: form.is_base = 'derived'; break;
+        case unit.is_base == false && unit.base_measurement_unit_id == null: form.is_base = 'derived_per_sku'; break;
+        default: "unpredicted";
+    };
+    form.base_measurement_unit_id = unit.base_measurement_unit_id;
+    form.conversion = unit.conversion;
     form.clearErrors();
     dialog.value = true;
 };
 
 const submitForm = () => {
     if (editingId.value) {
-        form.put(`/items/units/${editingId.value}`, {
-            onSuccess: () => {
-                dialog.value = false;
-                form.reset();
-                router.reload();
-            }
-        });
+        form
+            .transform(data => {
+                return {
+                    ...data,
+                    is_base: data.is_base == true,
+                    base_measurement_unit_id: (data.is_base != 'derived') ? null : data.base_measurement_unit_id,
+                    conversion: (data.is_base != 'derived') ? null : data.conversion,
+                }
+            })
+            .put(`/items/units/${editingId.value}`, {
+                onSuccess: () => {
+                    dialog.value = false;
+                    form.reset();
+                    router.reload();
+                }
+            });
     } else {
-        form.post('/items/units', {
+        form.transform(data => {
+            return {
+                ...data,
+                is_base: data.is_base == true,
+                base_measurement_unit_id: (data.is_base != 'derived') ? null : data.base_measurement_unit_id,
+                conversion: (data.is_base != 'derived') ? null : data.conversion,
+            }
+        }).post('/items/units', {
             onSuccess: () => {
                 dialog.value = false;
                 form.reset();
@@ -59,7 +87,8 @@ const submitForm = () => {
                     errorMessage.value = '';
                 }, 3000);
             }
-        });
+        }
+        );
     }
 };
 
@@ -176,7 +205,7 @@ const closeErrorDialog = () => {
                 <v-card-title>
                     <span class="text-h5">{{ editingId ? 'Edit Unit Ukuran' : 'Tambah Unit Ukuran Baru' }}</span>
                 </v-card-title>
-
+                {{ form.errors }}
                 <v-card-text>
                     <v-container>
                         <v-form @submit.prevent="submitForm">
@@ -185,6 +214,25 @@ const closeErrorDialog = () => {
                                     <v-text-field v-model="form.name" label="Nama Unit"
                                         :error-messages="form.errors.name" placeholder="e.g., pcs, kg, liter, box"
                                         required variant="outlined"></v-text-field>
+                                </v-col>
+                            </v-row>
+                            <v-row>
+                                <v-col>
+                                    <v-btn-toggle v-model="form.is_base" variant="tonal" density="comfortable"
+                                        color="blue" divided mandatory>
+                                        <v-btn :value="true">Dasar</v-btn>
+                                        <v-btn value="derived">Turunan</v-btn>
+                                        <v-btn value="derived_per_sku">Turunan Per SKU</v-btn>
+                                    </v-btn-toggle>
+                                </v-col>
+                            </v-row>
+                            <v-row v-if="form.is_base == 'derived'">
+                                <v-col>
+                                    <v-autocomplete v-model="form.base_measurement_unit_id" label="Satuan dasar"
+                                        :items="baseUnits" item-title="name" item-value="id"
+                                        :error-messages="form.errors.base_measurement_unit_id" />
+                                    <v-number-input v-model="form.conversion" label="Konversi ke satuan dasar" min="1"
+                                        control-variant="hidden" :error-messages="form.errors.conversion" />
                                 </v-col>
                             </v-row>
                         </v-form>

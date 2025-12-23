@@ -10,6 +10,7 @@ return new class extends Migration {
             $table->string('id', 100)->primary();
             $table->enum('type', ['in', 'out']); // 'in' untuk masuk, 'out' untuk keluar
             $table->string('recipient_id', 100)->nullable(); // untuk barang keluar
+            $table->string('user_id', 100)->nullable();
             $table->string('supplier')->nullable(); // untuk barang masuk
             $table->string('division')->nullable(); // untuk barang masuk
             $table->text('notes')->nullable();
@@ -18,11 +19,12 @@ return new class extends Migration {
             $table->softDeletes();
 
             $table->foreign('recipient_id')->references('id')->on('recipients')->onDelete('set null');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('transaction_details');
+        Schema::dropIfExists('transactions');
     }
 };

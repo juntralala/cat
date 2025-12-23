@@ -40,24 +40,24 @@ function login() {
             <div>Login</div>
             <v-card-subtitle class="text-center">Masukkan Username dan Password Anda</v-card-subtitle>
           </v-card-title>
-          <v-card-text>
-            <v-form @submit="login">
+          <v-form @submit.prevent="login">
+            <v-card-text>
               <v-text-field label="username" v-model="form.username"
                 :error-messages="form.errors.username"></v-text-field>
               <v-text-field label="password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
                 :error-messages="form.errors.password" :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                 @click:append-inner="toggleShowPassword"></v-text-field>
-            </v-form>
-          </v-card-text>
-          <v-card-actions class="justify-center mb-3">
-            <v-btn color="blue-darken-3" width="100%" variant="flat" @click="login" :loading="form.processing"
-              :disabled="form.processing">
-              <span v-if="!form.processing">Login</span>
-              <span v-else>
-                <v-progress-circular indeterminate />
-              </span>
-            </v-btn>
-          </v-card-actions>
+            </v-card-text>
+            <v-card-actions class="justify-center mb-3">
+              <v-btn color="blue-darken-3" width="100%" variant="flat" :loading="form.processing"
+                :disabled="form.processing" type="submit">
+                <span v-if="!form.processing">Login</span>
+                <span v-else>
+                  <v-progress-circular indeterminate />
+                </span>
+              </v-btn>
+            </v-card-actions>
+          </v-form>
         </v-card>
       </v-col>
     </v-row>

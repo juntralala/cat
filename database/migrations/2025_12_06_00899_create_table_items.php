@@ -11,8 +11,11 @@ return new class extends Migration
         Schema::create('items', function (Blueprint $table) {
             $table->string('id', 100)->primary();
             $table->string('name', 255);
+            $table->string('base_measurement_unit_id', 100);
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('base_measurement_unit_id')->on('measurement_units')->references('id');
         });
     }
 

@@ -186,6 +186,9 @@ const getUnitName = (unitId) => {
                     </v-dialog>
                 </v-btn>
             </v-col>
+            <v-col class="flex justify-end">
+                <v-btn :href="route('items.stocks.export.xlsx')" variant="tonal" color="blue-darken-2">Download Spreadsheet</v-btn>
+            </v-col>
         </v-row>
         
         <!-- Edit Stock Dialog -->

@@ -12,7 +12,7 @@ const props = defineProps({
 });
 
 const page = usePage();
-const currentUser = computed(() => page.props.auth.user);
+const currentUser = computed(() => page.props.auth.user); // untuk akses beberapa fitur yang memerlukan role khusus
 
 const recipientAddForm = ref({
   name: null,
@@ -34,37 +34,35 @@ const recipientEditFormRef = ref(null);
 const disableRecipientEditSubmit = ref(false);
 const showRecipientEditDialog = ref(false);
 
-// Removed divisions array - using combobox instead
-
 const recipientAddFormRule = {
   name: [
     requiredRule,
-    (value) => value.length >= 3 || "Nama harus setidaknya 3 karakter",
-    (value) => value.length < 255 || "Nama tidak boleh lebih 255 karakter",
+    (value) => value?.length >= 3 || "Nama harus setidaknya 3 karakter",
+    (value) => value?.length < 255 || "Nama tidak boleh lebih 255 karakter",
   ],
   nickname: [
-    requiredRule,
-    (value) => value.length >= 2 || "Nama panggilan harus setidaknya 2 karakter",
-    (value) => value.length < 255 || "Nama panggilan tidak boleh lebih 255 karakter",
+    // requiredRule,
+    (value) => (value?.trim() && value?.length >= 2) ? "Nama panggilan harus setidaknya 2 karakter" : true,
+    (value) => (value?.trim() && value?.length < 255) ? "Nama panggilan tidak boleh lebih 255 karakter" : true,
   ],
   division: [
-    // Division is optional
+    // 
   ],
 };
 
 const recipientEditFormRule = {
   name: [
     requiredRule,
-    (value) => value.length >= 3 || "Nama harus setidaknya 3 karakter",
-    (value) => value.length < 255 || "Nama tidak boleh lebih 255 karakter",
+    (value) => value?.length >= 3 || "Nama harus setidaknya 3 karakter",
+    (value) => value?.length < 255 || "Nama tidak boleh lebih 255 karakter",
   ],
   nickname: [
-    requiredRule,
-    (value) => value.length >= 2 || "Nama panggilan harus setidaknya 2 karakter",
-    (value) => value.length < 255 || "Nama panggilan tidak boleh lebih 255 karakter",
+    // requiredRule,
+    (value) => (!!value?.length && value?.length >= 2) ? "Nama panggilan harus setidaknya 2 karakter" : true,
+    (value) => (!!value?.length && value?.length < 255) ? "Nama panggilan tidak boleh lebih 255 karakter" : true,
   ],
   division: [
-    // Division is optional
+    // nggak ada validasi
   ],
 };
 
@@ -166,9 +164,9 @@ async function submitRecipientEditForm() {
                 <v-form ref="recipientAddFormRef">
                   <v-text-field v-model="recipientAddForm.name" label="Nama Lengkap" density="comfortable"
                     :rules="recipientAddFormRule.name" />
-                  <v-text-field v-model="recipientAddForm.nickname" label="Nama Panggilan" density="comfortable"
+                  <v-text-field v-model="recipientAddForm.nickname" label="Nama Panggilan (Opsional)" density="comfortable"
                     :rules="recipientAddFormRule.nickname" />
-                  <v-text-field v-model="recipientAddForm.division" :items="divisions" density="comfortable"
+                  <v-text-field v-model="recipientAddForm.division" density="comfortable"
                     :rules="recipientAddFormRule.division" label="Divisi (Opsional)" />
                 </v-form>
               </v-card-text>
@@ -196,9 +194,9 @@ async function submitRecipientEditForm() {
           <v-form ref="recipientEditFormRef">
             <v-text-field v-model="recipientEditForm.name" label="Nama Lengkap" density="comfortable"
               :rules="recipientEditFormRule.name" />
-            <v-text-field v-model="recipientEditForm.nickname" label="Nama Panggilan" density="comfortable"
+            <v-text-field v-model="recipientEditForm.nickname" label="Nama Panggilan (Opsional)" density="comfortable"
               :rules="recipientEditFormRule.nickname" />
-            <v-select v-model="recipientEditForm.division" :items="divisions" density="comfortable"
+            <v-select v-model="recipientEditForm.division" density="comfortable"
               :rules="recipientEditFormRule.division" label="Divisi (Opsional)" clearable />
           </v-form>
         </v-card-text>

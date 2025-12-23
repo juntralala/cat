@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Http\Controllers\MeasurementUnitController;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MeasurementUnit extends Model
@@ -16,17 +19,37 @@ class MeasurementUnit extends Model
     public $incrementing = false;
     public $timstamps = true;
 
-    protected  $fillable = [
-        'name'
+    protected $casts = [
+        'is_base' => 'boolean'
     ];
 
-    public function stocks()
-    {
-        return $this->hasMany(Stock::class, 'unit_id', 'id');
+    protected  $fillable = [
+        'name',
+        'base_measurement_unit_id',
+        'conversion',
+        'is_base'
+    ];
+
+    // self reference
+    public function baseMeasurementUnit(): BelongsTo {
+        return $this->belongsTo(MeasurementUnit::class, 'base_measurement_unit_id', 'id');
     }
 
-    public function transactionDetails()
+    public function derivedMeasurementUnit(): HasMany { // satuan turunan
+        return $this->hasMany(MeasurementUnit::class, 'base_measurement_unit_id', 'id');
+    }
+
+    public function basedMeasurementUnitItems(): HasMany
     {
-        return $this->hasMany(TransactionDetail::class, 'unit_id', 'id');
+        return $this->hasMany(Item::class, 'base_measurement_unit_id', 'id');
+    }
+
+    public function transactionItems(): HasMany
+    {
+        return $this->hasMany(TransactionItem::class, 'measurement_unit_id', 'id');
+    }
+
+    public function skuMeasurementUnitConversions(): HasMany {
+        return $this->hasMany(SkuMeasurementUnitConversion::class, 'measurement_unit_id', 'id');
     }
 }

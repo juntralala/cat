@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use App\Models\Setting;
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -37,7 +36,6 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        // [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
         $settings = Setting::all()->pluck('value', 'key')->toArray();
         return array_merge(parent::share($request), [
             ...parent::share($request),

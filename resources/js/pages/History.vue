@@ -130,10 +130,10 @@ function closeDetail() {
     selectedTransaction.value = null;
 }
 
-// Export to CSV
-function exportToCSV() {
+// Export to spreadhseet
+function exportToXlsx() {
     isExporting.value = true;
-    setTimeout(() => {
+    let timeoutId = setTimeout(() => {
         isExporting.value = false;
     }, 10_000);
 
@@ -152,10 +152,12 @@ function exportToCSV() {
 
     // Create download link to export endpoint
     const queryString = new URLSearchParams(params).toString();
-    const url = `${route('items.transactions.history.export.csv')}?${queryString}`;
+    const url = `${route('items.transactions.history.export.xlsx')}?${queryString}`;
 
     // Download file
     window.location.href = url;
+    isExporting.value = null;
+    clearTimeout(timeoutId);
 }
 </script>
 
@@ -252,11 +254,11 @@ function exportToCSV() {
                     <v-col cols="auto">
                         <v-tooltip>
                             <template #activator="{ props }">
-                                <v-btn v-bind="props" @click="exportToCSV" color="blue-accent-3" variant="tonal"
+                                <v-btn v-bind="props" @click="exportToXlsx" color="blue-accent-3" variant="tonal"
                                     :loading="isExporting"
                                     :disabled="!transactions.data || transactions.data.length === 0">
                                     <v-icon icon="mdi-download" start></v-icon>
-                                    Unduh CSV
+                                    Unduh SpreadSheet
                                 </v-btn>
                             </template>
                             <span>Unduh data berdasarkan filter yang aktif saat ini</span>

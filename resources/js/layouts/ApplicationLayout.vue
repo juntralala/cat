@@ -57,7 +57,7 @@ onUpdated(function () {
 </script>
 
 <template>
-    <Head>
+    <Head v-slot="props">
         <link rel="shortcut icon" :href="$page?.props?.settings?.app_icon || 'favicon.ico'" type="image/x-icon">
         <title>{{$page?.props?.settings?.app_name}}</title>
     </Head>
@@ -129,6 +129,14 @@ onUpdated(function () {
                     <div class="flex items-baseline gap-1">
                         <v-icon icon="mdi-history" />
                         <div>Riwayat</div>
+                    </div>
+                </v-list-item>
+                </Link>
+                <Link :href="route('items.skus')">
+                <v-list-item value="items.skus">
+                    <div class="flex items-baseline gap-1">
+                        <v-icon icon="mdi-cube" />
+                        <div>Unit Penyimpanan Barang</div>
                     </div>
                 </v-list-item>
                 </Link>

@@ -3,13 +3,15 @@ import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import { ref } from 'vue';
 import { useForm, Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
+import { Footprints } from 'lucide-vue-next';
 
 defineOptions({
     layout: ApplicationLayout
 });
 
 const props = defineProps({
-    items: Array
+    items: Array,
+    baseUnits: Array // hanya di pakai di form add/edit (refactor nanti)
 });
 
 const showItemAddDialog = ref(false);
@@ -20,12 +22,14 @@ const disableItemAddSubmit = ref(false);
 const disableItemEditSubmit = ref(false);
 
 const itemAddForm = useForm({
-    name: ''
+    name: '',
+    base_measurement_unit_id: ''
 });
 
 const itemEditForm = useForm({
     id: null,
-    name: ''
+    name: '',
+    base_measurement_unit_id: ''
 });
 
 const itemFormRule = {
@@ -39,8 +43,10 @@ const itemFormRule = {
 const openEditDialog = (item) => {
     itemEditForm.id = item.id;
     itemEditForm.name = item.name;
+    itemEditForm.base_measurement_unit_id = item.base_measurement_unit.id;
     itemEditForm.clearErrors();
     showItemEditDialog.value = true;
+    itemEditForm.defaults();
 };
 
 async function submitItemAddForm() {
@@ -74,7 +80,7 @@ async function submitItemEditForm() {
             },
             onError: () => {
                 disableItemEditSubmit.value = false;
-            }
+            },
         });
     }
 }
@@ -115,6 +121,13 @@ const deleteItem = (id) => {
                                         density="comfortable"
                                         :rules="itemFormRule.name"
                                         :error-messages="itemAddForm.errors.name" />
+                                    <v-autocomplete 
+                                        v-model="itemAddForm.base_measurement_unit_id"
+                                        :error-messages="itemAddForm.errors.base_measurement_unit_id"
+                                        label="Satuan dasar"
+                                        :items="baseUnits"
+                                        item-title="name"
+                                        item-value="id"/>
                                 </v-form>
                             </v-card-text>
                             <v-card-actions>
@@ -132,7 +145,7 @@ const deleteItem = (id) => {
                 </v-btn>
             </v-col>
         </v-row>
-        
+
         <!-- Edit Item Dialog -->
         <v-dialog max-width="800" v-model="showItemEditDialog">
             <v-card>
@@ -141,18 +154,26 @@ const deleteItem = (id) => {
                 <v-card-text>
                     <v-form ref="itemEditFormRef">
                         <v-text-field 
-                            v-model="itemEditForm.name" 
-                            label="Nama Barang" 
-                            density="comfortable"
-                            :rules="itemFormRule.name"
-                            :error-messages="itemEditForm.errors.name" />
+                        v-model="itemEditForm.name" 
+                        label="Nama Barang" 
+                        density="comfortable"
+                        :rules="itemFormRule.name"
+                        :error-messages="itemEditForm.errors.name" />
+                        <v-autocomplete
+                        v-model="itemEditForm.base_measurement_unit_id"
+                        :error-messages="itemAddForm.errors.base_measurement_unit_id"
+                        label="Satuan dasar"
+                        :items="baseUnits"
+                        item-title="name"
+                        item-value="id"/>
                     </v-form>
                 </v-card-text>
                 <v-card-actions>
                     <v-btn @click="showItemEditDialog = false">Cancel</v-btn>
-                    <v-btn color="blue-darken-4" :disabled="disableItemEditSubmit"
-                        @click="submitItemEditForm">
-                        <span v-if="!disableItemEditSubmit">Update</span>
+                    <v-btn color="blue-darken-4"
+                    :disabled="disableItemEditSubmit || (!itemEditForm.isDirty)"
+                    @click="submitItemEditForm">
+                    <span v-if="!disableItemEditSubmit">Update</span>
                         <span v-else>
                             <v-progress-circular indeterminate size="20" />
                         </span>
@@ -161,20 +182,22 @@ const deleteItem = (id) => {
             </v-card>
         </v-dialog>
         
-        <!-- Desktop Table View -->
+        <!-- Desktop -->
         <v-row class="hidden! md:block!">
             <v-col>
                 <v-data-table 
                     :headers="[
                         { title: 'No', key: 'no', width: '6%' },
                         { title: 'Nama Barang', key: 'name' },
-                        { title: 'More', key: 'more', width: '10%' }
+                        { title: 'Satuan Dasar', key: 'baseMeasurementUnit' },
+                        { title: 'Tindakan', key: 'more', width: '10%' }
                     ]" 
                     :items="items.map((item, index) => ({ 
                         no: index + 1, 
                         name: item.name, 
+                        baseMeasurementUnit: item?.base_measurement_unit.name, 
                         more: item.id,
-                        fullData: item 
+                        fullData: item
                     }))"
                     class="hidden! md:block!">
                     <template #headers="{ headers }">
@@ -185,41 +208,41 @@ const deleteItem = (id) => {
                     <template #item.more="{ item }">
                         <v-btn variant="text" icon>
                             <v-icon icon="mdi-dots-vertical" />
-                            <v-menu activator="parent">
-                                <v-list density="compact">
-                                    <v-list-item 
-                                        value="edit" 
-                                        @click="openEditDialog(item.fullData)">
-                                        <v-icon icon="mdi-pencil" class="mr-2" />
-                                        Sunting
-                                    </v-list-item>
-                                    <v-list-item value="delete">
-                                        <v-icon icon="mdi-delete" class="mr-2" />
-                                        Hapus
-                                        <v-dialog activator="parent" max-width="400" v-slot="{ isActive }">
-                                            <v-card>
-                                                <v-card-title
-                                                    class="text-wrap text-center bg-blue-darken-2">Konfirmasi!</v-card-title>
-                                                <v-card-text>
-                                                    <div>Apakah yakin untuk menghapus barang dengan nama <span
-                                                            class="text-blue-600">{{ item.name }}</span></div>
-                                                </v-card-text>
-                                                <v-card-actions>
-                                                    <v-btn @click="deleteItem(item.more); isActive.value = false">Ya</v-btn>
-                                                    <v-btn @click="isActive.value = false">Batal</v-btn>
-                                                </v-card-actions>
-                                            </v-card>
-                                        </v-dialog>
-                                    </v-list-item>
-                                </v-list>
-                            </v-menu>
+                                <v-menu activator="parent">
+                                    <v-list density="compact">
+                                        <v-list-item 
+                                            value="edit" 
+                                            @click="openEditDialog(item.fullData)">
+                                            <v-icon icon="mdi-pencil" class="mr-2" />
+                                            Sunting
+                                        </v-list-item>
+                                        <v-list-item value="delete">
+                                            <v-icon icon="mdi-delete" class="mr-2" />
+                                            Hapus
+                                            <v-dialog activator="parent" max-width="400" v-slot="{ isActive }">
+                                                <v-card>
+                                                    <v-card-title
+                                                        class="text-wrap text-center bg-blue-darken-2">Konfirmasi!</v-card-title>
+                                                    <v-card-text>
+                                                        <div>Apakah yakin untuk menghapus barang dengan nama <span
+                                                                class="text-blue-600">{{ item.name }}</span></div>
+                                                    </v-card-text>
+                                                    <v-card-actions>
+                                                        <v-btn @click="deleteItem(item.more); isActive.value = false">Ya</v-btn>
+                                                        <v-btn @click="isActive.value = false">Batal</v-btn>
+                                                    </v-card-actions>
+                                                </v-card>
+                                            </v-dialog>
+                                        </v-list-item>
+                                    </v-list>
+                                </v-menu>
                         </v-btn>
                     </template>
                 </v-data-table>
             </v-col>
         </v-row>
         
-        <!-- Mobile Card View -->
+        <!-- Mobile -->
         <v-row class="md:hidden!">
             <v-col>
                 <v-row v-for="(item, index) in items" :key="item.id">

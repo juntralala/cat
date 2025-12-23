@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Transaction;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Inertia\Inertia;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class TransactionHistoryController extends Controller
 {
@@ -57,59 +60,46 @@ class TransactionHistoryController extends Controller
         ]);
     }
 
-    public function toCSV(Request $request)
+    public function toXlsx(Request $request)
     {
         $transactions = $this->getTransactionQueryBuilderByRequest($request)
             ->get();
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
 
-        $filename = 'transactions_' . date('Y-m-d_His') . '.csv';
+        // header
+        $sheet->fromArray(source: [
+            'ID',
+            'Tipe',
+            'Tanggal Transaksi',
+            'Penerima/Pemasok',
+            'Divisi',
+            'Item',
+            'Unit',
+            'Jumlah',
+            'Catatan',
+        ], nullValue: null, startCell: 'A1');
 
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0'
-        ];
-
-        $callback = function () use ($transactions) {
-            $file = fopen('php://output', 'w');
-
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            fputcsv($file, [
-                'Tanggal Transaksi',
-                'Tipe',
-                'Supplier/Penerima',
-                'Divisi',
-                'Nama Barang',
-                'Satuan',
-                'Jumlah',
-                'Catatan'
-            ]);
-
-            foreach ($transactions as $transaction) {
-                $party = $transaction->type === 'in'
-                    ? $transaction->supplier
-                    : ($transaction->recipient?->name ?? '-');
-
-                foreach ($transaction->transactionDetails as $detail) {
-                    fputcsv($file, [
-                        $transaction->transaction_date->format('d/m/Y'),
-                        $transaction->type === 'in' ? 'Masuk' : 'Keluar',
-                        $party,
-                        $transaction->division ?? '-',
-                        $detail->item?->name ?? '-',
-                        $detail->unit?->name ?? '-',
-                        $detail->quantity,
-                        $transaction->notes ?? '-'
-                    ]);
-                }
+        // data
+        foreach ($transactions as $index => $transaction) {
+            foreach ($transaction->transactionDetails as $detail) {
+                $sheet->fromArray(source: [
+                    $transaction->id,
+                    $transaction->type == 'in' ? 'Masuk' : 'Keluar',
+                    $transaction->transaction_date->format('Y-m-d'),
+                    $transaction->recipient?->name ?? $transaction->supplier,
+                    $transaction->recipient?->division ?? $transaction->division,
+                    $detail->item->name,
+                    $detail->unit->name,
+                    $detail->quantity,
+                    $transaction->notes,
+                ], nullValue: null, startCell: 'A' . (2 + $index)); // mulai dari baris ke-2
             }
+        }
+        $writer = new Xlsx($spreadsheet);
 
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, 'history_trangsaksi_' . Date::now()->format('d_m_Y_i_s') . '.xlsx');
     }
 }

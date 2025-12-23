@@ -20,12 +20,18 @@ const menuDate = ref(false);
 let successTimeout = null;
 
 // Watch perubahan recipient_id untuk auto-fill division
-function onRecipientChange(recipientId) {
-    if (recipientId) {
-        const selectedRecipient = props.recipients.find(r => r.id === recipientId);
-        if (selectedRecipient && selectedRecipient.division) {
-            form.division = selectedRecipient.division;
-        }
+function onRecipientChange(recipient) {
+    if(!recipient) {
+        console.warn("recive recipient null");
+        return;
+    }
+    if(recipient instanceof String || typeof recipient === 'string') {
+        console.log("recive recipient string");
+        return; 
+    }
+
+    if (recipient.division) {
+        form.division = recipient.division;
     }
 }
 
@@ -196,7 +202,7 @@ onBeforeUpdate(() => {
                     <!-- Header Transaction Fields -->
                     <v-row class="pt-4">
                         <v-col cols="12" md="4">
-                            <v-autocomplete v-model="form.recipient_id" density="comfortable" :items="recipients"
+                            <v-combobox v-model="form.recipient_id" density="comfortable" :items="recipients"
                                 item-title="name_nickname" item-value="id" label="Penerima"
                                 :error-messages="form.errors.recipient_id" @update:model-value="onRecipientChange" />
                         </v-col>

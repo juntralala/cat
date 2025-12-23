@@ -7,21 +7,22 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('stocks', function (Blueprint $table) {
+        Schema::create('skus', function (Blueprint $table) {
             $table->string('id', 100)->primary();
             $table->string('item_id', 100);
-            $table->string('unit_id', 100);
+            $table->string('sku', 100);
+            $table->string('spesification_name', 255);
             $table->integer('quantity');
+            $table->decimal('price', 22, 4);
             $table->timestamps();
             $table->softDeletes();
             
             $table->foreign('item_id')->references('id')->on('items')->onDelete('cascade');
-            $table->foreign('unit_id')->references('id')->on('measurement_units')->onDelete('cascade');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('stocks');
+        Schema::dropIfExists('skus');
     }
 };

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transaction extends Model
@@ -23,6 +25,7 @@ class Transaction extends Model
     protected $fillable = [
         'type',
         'recipient_id',
+        'user_id',
         'supplier',
         'division',
         'notes',
@@ -34,16 +37,21 @@ class Transaction extends Model
     ];
 
     protected $with = [
-        'transactionDetails',
+        'transactionItems',
     ];
 
-    public function transactionDetails()
+    public function transactionItems(): HasMany
     {
-        return $this->hasMany(TransactionDetail::class, 'transaction_id', 'id');
+        return $this->hasMany(TransactionItem::class, 'transaction_id', 'id');
     }
 
-    public function recipient()
+    public function recipient(): BelongsTo
     {
         return $this->belongsTo(Recipient::class, 'recipient_id', 'id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recipient_id', 'id');
     }
 }

@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('recipients', function (Blueprint $table) {
             $table->string('id', 100)->primary();
-            $table->string('name');
-            $table->string('nickname')->nullable();
-            $table->string('division')->nullable();
+            $table->string('name', 255);
+            $table->string('nickname', 255)->nullable();
+            $table->string('division', 100)->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

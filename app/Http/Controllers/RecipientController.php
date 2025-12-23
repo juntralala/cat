@@ -14,7 +14,7 @@ class RecipientController extends Controller
         return $request->validate([
             'name' => 'required|string|max:255',
             'nickname' => 'nullable|string|max:255',
-            'division' => 'nullable|string|max:255',
+            'division' => 'nullable|string|max:100',
         ]);
     }
 

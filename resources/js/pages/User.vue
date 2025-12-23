@@ -2,7 +2,7 @@
 import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import { onMounted, ref, computed } from 'vue';
 import { Head, usePage } from '@inertiajs/vue3';
-import axios from '@/axios.js';
+import axios from 'axios';
 
 defineOptions({
     layout: ApplicationLayout

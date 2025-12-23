@@ -1,5 +1,5 @@
 <script setup>
-import BubbleUp from '@/common/BubbleUp.vue';
+import BubbleUp from '@/components/atoms/BubbleUp.vue';
 
 </script>
 

@@ -16,7 +16,7 @@ class UserService
     ) {
     }
 
-    public function getUsers($page, $perPage)
+    public function getUsers($page = 1, $perPage = 10)
     {
         return $this->userRepository->getUsers($page, $perPage);
     }
