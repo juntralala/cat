@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Sku;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class CreateSkuRequest extends FormRequest
+class CreateUpdateSkuRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -16,9 +18,11 @@ class CreateSkuRequest extends FormRequest
      */
     public function rules(): array
     {
+        // skuId tidak null menandakan update request
+        $skuId = $this->route('id');
         return [
             'item_id' => ['required', 'string', 'exists:items,id'],
-            'sku' => ['required', 'string', 'unique:skus,sku'],
+            'sku' => ['required', 'string', Rule::unique('skus','sku')->ignore($skuId)->whereNull('deleted_at') ],
             'spesification_name' => ['required', 'string'],
             'quantity' => ['required', 'numeric', 'min:0'],
             'price' => ['required', 'numeric', 'min:0'],

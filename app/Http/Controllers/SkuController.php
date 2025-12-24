@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\CreateSkuRequest;
+use App\Http\Requests\CreateUpdateSkuRequest;
 use App\Models\Item;
 use App\Models\Sku;
 use App\Models\MeasurementUnit;
@@ -15,7 +15,8 @@ class SkuController extends Controller
     public function page(Request $request): \Inertia\Response
     {
         $page = $request->integer('page', 1);
-        $skus = Sku::paginate(perPage: 10, page: $page)
+        $skus = Sku::with('skuMeasurementUnitConversions')
+            ->paginate(perPage: 10, page: $page)
             ->withQueryString();
         $items = Item::all(['id', 'name']);
         $derivedMeasurementUnitPerSku = MeasurementUnit::where('is_base', false)
@@ -29,7 +30,7 @@ class SkuController extends Controller
         ]);
     }
 
-    public function create(CreateSkuRequest $request)
+    public function create(CreateUpdateSkuRequest $request)
     {
         $safe = $request->safe();
         DB::transaction(function () use ($safe) {
@@ -45,6 +46,35 @@ class SkuController extends Controller
             $sku->skuMeasurementUnitConversions()->createMany(
                 $safe->array('sku_measurement_unit_conversions')
             );
+        });
+    }
+
+    public function update(CreateUpdateSkuRequest $request, $skuId)
+    {
+        $safe = $request->safe();
+        DB::transaction(function () use ($safe, $skuId) {
+            $sku = Sku::findOrFail($skuId);
+            $sku->update(
+                $safe->only(
+                    'item_id',
+                    'spesification_name',
+                    'quantity',
+                    'price',
+                )
+            );
+            $sku->skuMeasurementUnitConversions()->delete();
+            $sku->skuMeasurementUnitConversions()->createMany(
+                $safe->array('sku_measurement_unit_conversions')
+            );
+        });
+    }
+
+    public function delete($skuId)
+    {
+        DB::transaction(function () use ($skuId) {
+            $sku = Sku::findOrFail($skuId);
+            $sku->skuMeasurementUnitConversions()->delete();
+            $sku->delete();
         });
     }
 }

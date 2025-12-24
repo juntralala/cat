@@ -45,6 +45,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/items/units/{id}', [MeasurementUnitController::class, 'destroy']);
     Route::get('/items/skus', [SkuController::class, 'page'])->name('items.skus');
     Route::post('/items/skus', [SkuController::class, 'create'])->name('items.skus.create');
+    Route::put('/items/skus/{id}', [SkuController::class, 'update'])->name('items.skus.update');
+    Route::delete('/items/skus/{id}', [SkuController::class, 'delete'])->name('items.skus.delete');
     Route::get('/items/stocks', [StockController::class, 'index'])->name('items.stocks');
     Route::post('/items/stocks', [StockController::class, 'store']);
     Route::put('/items/stocks/{id}', [StockController::class, 'update']);

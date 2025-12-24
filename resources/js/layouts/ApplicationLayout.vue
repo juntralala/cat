@@ -32,6 +32,7 @@ function selectMenu() {
         case 'items': updateSelectedMenu('items'); break;
         case 'items.units': updateSelectedMenu('items.units'); break;
         case 'items.stocks': updateSelectedMenu('items.stocks'); break;
+        case 'items.skus': updateSelectedMenu('items.skus'); break;
         case 'recipients': updateSelectedMenu('recipients'); break;
         default: updateSelectedMenu(null);
     }

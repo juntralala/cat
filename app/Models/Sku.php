@@ -31,6 +31,7 @@ class Sku extends Model
 
     protected $casts = [
         'quantity' => 'integer',
+        'price' => 'double',
     ];
 
     protected $with = ['item'];

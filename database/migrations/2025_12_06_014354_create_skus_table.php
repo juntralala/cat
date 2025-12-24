@@ -10,13 +10,14 @@ return new class extends Migration
         Schema::create('skus', function (Blueprint $table) {
             $table->string('id', 100)->primary();
             $table->string('item_id', 100);
-            $table->string('sku', 100);
+            $table->string('sku', 100); // keunikan sku hanya divalidasi di backend, tidak database (tanpa unique constraint)
             $table->string('spesification_name', 255);
             $table->integer('quantity');
             $table->decimal('price', 22, 4);
             $table->timestamps();
             $table->softDeletes();
             
+            $table->index('sku');
             $table->foreign('item_id')->references('id')->on('items')->onDelete('cascade');
         });
     }
