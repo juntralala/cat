@@ -3,7 +3,6 @@ import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import { ref } from 'vue';
 import { useForm, Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
-import { Footprints } from 'lucide-vue-next';
 
 defineOptions({
     layout: ApplicationLayout

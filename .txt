@@ -1,2 +1,5 @@
-tambahkan divisi di barang masuk.
-buat nama panggilan jadi optional
+spesifikasi nama barang *
+export data stok 
+bug: edit nama barang * 
+nama penerima otomatis tertambah *
+harga
