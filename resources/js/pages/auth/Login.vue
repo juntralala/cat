@@ -42,14 +42,17 @@ function login() {
           </v-card-title>
           <v-form @submit.prevent="login">
             <v-card-text>
-              <v-text-field label="username" v-model="form.username"
+              <v-text-field
+v-model="form.username" label="username"
                 :error-messages="form.errors.username"></v-text-field>
-              <v-text-field label="password" v-model="form.password" :type="showPassword ? 'text' : 'password'"
+              <v-text-field
+v-model="form.password" label="password" :type="showPassword ? 'text' : 'password'"
                 :error-messages="form.errors.password" :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
                 @click:append-inner="toggleShowPassword"></v-text-field>
             </v-card-text>
             <v-card-actions class="justify-center mb-3">
-              <v-btn color="blue-darken-3" width="100%" variant="flat" :loading="form.processing"
+              <v-btn
+color="blue-darken-3" width="100%" variant="flat" :loading="form.processing"
                 :disabled="form.processing" type="submit">
                 <span v-if="!form.processing">Login</span>
                 <span v-else>

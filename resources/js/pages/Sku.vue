@@ -4,6 +4,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AlertDialog from '@/components/organisms/AlertDialog.vue';
+import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
 defineOptions({
   layout: ApplicationLayout
 });
@@ -21,7 +22,7 @@ const { skus, derivedMeasurementUnitPerSku } = defineProps({
   }
 });
 const showError = ref(false);
-const page = ref(skus?.page || 1);
+const page = ref(skus?.current_page || 1);
 const addForm = useForm({
   item_id: null,
   sku: null,
@@ -111,6 +112,10 @@ watch(() => editForm.sku_measurement_unit_conversions, (newVal) => {
   }
 }, { deep: true });
 
+watch(page, () => {
+  router.get(route("items.skus") + `?page=${page.value}`);
+}, { immediate: false });
+
 function submitAddForm(isActive) {
   addForm.transform((data) => {
     return {
@@ -150,18 +155,19 @@ function deleteSku(skuId) {
 </script>
 
 <template>
-  <AlertDialog v-model="showError"/>
+  <AlertDialog v-model="showError" />
+
   <Head title="Unit Penyimpanan Stok"></Head>
   <v-container>
     <v-row>
       <v-col>
-        <h1 class="font-medium text-4xl">Unit <span class="text-blue-darken-2">Penyimpanan Stok</span></h1>
+        <PageTitleHighlightPart first-part-title="Unit" second-part-title="Penyimpanan Stok" />
       </v-col>
     </v-row>
     <v-row>
       <v-col>
         <v-btn id="create-form" variant="tonal" color="blue">Tambah</v-btn>
-        <v-dialog activator="#create-form" max-width="850" @after-leave="clearAddForm" v-slot="{ isActive }">
+        <v-dialog v-slot="{ isActive }" activator="#create-form" max-width="850" @after-leave="clearAddForm">
           <v-card>
             <v-card-title class="text-center">Tambah Unit Penyimpanan Stok</v-card-title>
             <div class="px-3"><v-divider /></div>
@@ -169,24 +175,24 @@ function deleteSku(skuId) {
               <v-card-text>
                 <v-row>
                   <v-col cols="12" md="6" class="pb-1">
-                    <v-autocomplete label="Barang" v-model="addForm.item_id" :items="items" item-value="id"
+                    <v-autocomplete v-model="addForm.item_id" label="Barang" :items="items" item-value="id"
                       item-title="name" density="comfortable" :error-messages="addForm?.errors?.item_id" />
                   </v-col>
                   <v-col cols="12" md="6" class="pb-1">
-                    <v-text-field label="SKU" v-model="addForm.sku" density="comfortable"
+                    <v-text-field v-model="addForm.sku" label="SKU" density="comfortable"
                       :error-messages="addForm?.errors?.sku" />
                   </v-col>
                   <v-col cols="12" md="6" class="py-1">
-                    <v-text-field label="Nama Spesifikasi" v-model="addForm.spesification_name" density="comfortable"
+                    <v-text-field v-model="addForm.spesification_name" label="Nama Spesifikasi" density="comfortable"
                       :error-messages="addForm?.errors?.spesification_name" />
                   </v-col>
                   <v-col cols="12" md="6" class="py-1">
-                    <v-number-input label="Harga satuan terkecil" prefix="Rp." :precision="2" :min="0"
-                      control-variant="hidden" density="comfortable" v-model="addForm.price"
+                    <v-number-input v-model="addForm.price" label="Harga satuan terkecil" prefix="Rp." :precision="2"
+                      :min="0" control-variant="hidden" density="comfortable"
                       :error-messages="addForm?.errors?.price" />
                   </v-col>
                   <v-col cols="12" md="6" class="py-1">
-                    <v-number-input label="Stok" v-model="addForm.quantity" :min="0" control-variant="hidden"
+                    <v-number-input v-model="addForm.quantity" label="Stok" :min="0" control-variant="hidden"
                       density="comfortable" :error-messages="addForm?.errors?.quantity" />
                   </v-col>
                 </v-row>
@@ -203,8 +209,8 @@ function deleteSku(skuId) {
                       control-variant="hidden" density="comfortable" />
                   </v-col>
                   <v-col cols="2" md="1" class="px-0! md:px-3!">
-                    <v-btn @click="removeItemFromConversionInputs(index)"
-                      :disabled="disabledRemoveBtnForLastItem(index)" icon="mdi-minus" variant="plain" class="mb-4" />
+                    <v-btn :disabled="disabledRemoveBtnForLastItem(index)" icon="mdi-minus" variant="plain" class="mb-4"
+                      @click="removeItemFromConversionInputs(index)" />
                   </v-col>
                 </v-row>
               </v-card-text>
@@ -231,7 +237,7 @@ function deleteSku(skuId) {
             </tr>
           </thead>
           <tbody>
-            <tr v-if="skus.data.length != 0" v-for="(sku, i) in skus.data">
+            <tr v-for="(sku, i) in skus.data" v-if="skus.data.length != 0">
               <td>{{ i + 1 }}</td>
               <td>{{ sku.sku }}</td>
               <td>{{ sku.item.name }}</td>
@@ -239,15 +245,15 @@ function deleteSku(skuId) {
               <td>{{ sku.quantity }}</td>
               <td>
                 <v-menu>
-                  <template v-slot:activator="{ props }">
+                  <template #activator="{ props }">
                     <v-icon icon="mdi-dots-vertical" v-bind="props" />
                   </template>
                   <v-list class="py-0.5!">
                     <v-list-item class="mx-0! px-1!">
-                      <v-btn @click="openEditDialog(sku)" variant="text" block>
+                      <v-btn variant="text" block @click="openEditDialog(sku)">
                         <span>Edit</span>
                         <v-dialog activator="parent" max-width="850" @after-leave="clearEditForm">
-                          <template v-slot:default="{ isActive }">
+                          <template #default="{ isActive }">
                             <v-card>
                               <v-card-title class="text-center">Edit Unit Penyimpanan Stok</v-card-title>
                               <div class="px-3"><v-divider /></div>
@@ -255,25 +261,25 @@ function deleteSku(skuId) {
                                 <v-card-text>
                                   <v-row>
                                     <v-col cols="12" md="6" class="pb-1">
-                                      <v-autocomplete label="Barang" v-model="editForm.item_id" :items="items"
+                                      <v-autocomplete v-model="editForm.item_id" label="Barang" :items="items"
                                         item-value="id" item-title="name" density="comfortable"
                                         :error-messages="editForm?.errors?.item_id" />
                                     </v-col>
                                     <v-col cols="12" md="6" class="pb-1">
-                                      <v-text-field label="SKU" v-model="editForm.sku" density="comfortable"
+                                      <v-text-field v-model="editForm.sku" label="SKU" density="comfortable"
                                         :error-messages="editForm?.errors?.sku" />
                                     </v-col>
                                     <v-col cols="12" md="6" class="py-1">
-                                      <v-text-field label="Nama Spesifikasi" v-model="editForm.spesification_name"
+                                      <v-text-field v-model="editForm.spesification_name" label="Nama Spesifikasi"
                                         density="comfortable" :error-messages="editForm?.errors?.spesification_name" />
                                     </v-col>
                                     <v-col cols="12" md="6" class="py-1">
-                                      <v-number-input label="Harga satuan terkecil" prefix="Rp." :precision="2" :min="0"
-                                        control-variant="hidden" density="comfortable" v-model="editForm.price"
-                                        :error-messages="editForm?.errors?.price" />
+                                      <v-number-input v-model="editForm.price" label="Harga satuan terkecil"
+                                        prefix="Rp." :precision="2" :min="0" control-variant="hidden"
+                                        density="comfortable" :error-messages="editForm?.errors?.price" />
                                     </v-col>
                                     <v-col cols="12" md="6" class="py-1">
-                                      <v-number-input label="Stok" v-model="editForm.quantity" :min="0"
+                                      <v-number-input v-model="editForm.quantity" label="Stok" :min="0"
                                         control-variant="hidden" density="comfortable"
                                         :error-messages="editForm?.errors?.quantity" />
                                     </v-col>
@@ -292,9 +298,9 @@ function deleteSku(skuId) {
                                         density="comfortable" />
                                     </v-col>
                                     <v-col cols="2" md="1" class="px-0! md:px-3!">
-                                      <v-btn @click="removeItemFromConversionInputs(index, editForm)"
-                                        :disabled="disabledRemoveBtnForLastItem(index, editForm)" icon="mdi-minus"
-                                        variant="plain" class="mb-4" />
+                                      <v-btn :disabled="disabledRemoveBtnForLastItem(index, editForm)" icon="mdi-minus"
+                                        variant="plain" class="mb-4"
+                                        @click="removeItemFromConversionInputs(index, editForm)" />
                                     </v-col>
                                   </v-row>
                                 </v-card-text>
@@ -311,7 +317,7 @@ function deleteSku(skuId) {
                     <v-list-item class="mx-0! px-1!">
                       <v-btn variant="text" block>
                         <span>Hapus</span>
-                        <v-dialog activator="parent" max-width="450" v-slot="{ isActive }">
+                        <v-dialog v-slot="{ isActive }" activator="parent" max-width="450">
                           <v-card title="Konfirmasi Penghapusan!" class="text-center">
                             <v-card-text>
                               <p class="mb-8">
@@ -319,8 +325,8 @@ function deleteSku(skuId) {
                                 "<strong>{{ sku.sku
                                   }}</strong>"?
                               </p>
-                              <v-btn @click="isActive.value = false" color="blue" variant="tonal">Tidak</v-btn>
-                              <v-btn @click="deleteSku(sku.id)" variant="flat">Iya</v-btn>
+                              <v-btn color="blue" variant="tonal" @click="isActive.value = false">Tidak</v-btn>
+                              <v-btn variant="flat" @click="deleteSku(sku.id)">Iya</v-btn>
                             </v-card-text>
                           </v-card>
                         </v-dialog>

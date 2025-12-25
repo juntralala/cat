@@ -122,11 +122,12 @@ const getUnitName = (unitId) => {
 </script>
 
 <template>
+
     <Head title="Stok"></Head>
     <v-container>
         <v-row>
             <v-col>
-                <h1 class="text-4xl font-medium">Kelola <span class="text-blue-accent-3">Stok</span></h1>
+                <PageTitleHighlightPart first-part-title="Kelola" second-part-title="Stok" />
             </v-col>
         </v-row>
         <v-row>
@@ -136,40 +137,21 @@ const getUnitName = (unitId) => {
                         <v-icon icon="mdi-plus" />
                         Tambah stok
                     </span>
-                    <v-dialog activator="parent" max-width="800" v-slot="{ isActive }" v-model="showStockAddDialog">
+                    <v-dialog v-slot="{ isActive }" v-model="showStockAddDialog" activator="parent" max-width="800">
                         <v-card>
                             <v-card-title class="text-center">Tambah Stok</v-card-title>
                             <v-divider />
                             <v-card-text>
                                 <v-form ref="stockAddFormRef" @submit.prevent="submitStockAddForm">
-                                    <v-select
-                                        v-model="stockAddForm.item_id"
-                                        :items="items"
-                                        item-title="name"
-                                        item-value="id"
-                                        label="Barang"
-                                        density="comfortable"
-                                        :rules="stockFormRule.item_id"
-                                        :error-messages="stockAddForm.errors.item_id"
-                                    />
-                                    <v-select
-                                        v-model="stockAddForm.unit_id"
-                                        :items="units"
-                                        item-title="name"
-                                        item-value="id"
-                                        label="Unit Ukuran"
-                                        density="comfortable"
-                                        :rules="stockFormRule.unit_id"
-                                        :error-messages="stockAddForm.errors.unit_id"
-                                    />
-                                    <v-text-field
-                                        v-model="stockAddForm.quantity"
-                                        label="Jumlah"
-                                        type="number"
-                                        density="comfortable"
-                                        :rules="stockFormRule.quantity"
-                                        :error-messages="stockAddForm.errors.quantity"
-                                    />
+                                    <v-select v-model="stockAddForm.item_id" :items="items" item-title="name"
+                                        item-value="id" label="Barang" density="comfortable"
+                                        :rules="stockFormRule.item_id" :error-messages="stockAddForm.errors.item_id" />
+                                    <v-select v-model="stockAddForm.unit_id" :items="units" item-title="name"
+                                        item-value="id" label="Unit Ukuran" density="comfortable"
+                                        :rules="stockFormRule.unit_id" :error-messages="stockAddForm.errors.unit_id" />
+                                    <v-text-field v-model="stockAddForm.quantity" label="Jumlah" type="number"
+                                        density="comfortable" :rules="stockFormRule.quantity"
+                                        :error-messages="stockAddForm.errors.quantity" />
                                 </v-form>
                             </v-card-text>
                             <v-card-actions>
@@ -187,51 +169,32 @@ const getUnitName = (unitId) => {
                 </v-btn>
             </v-col>
             <v-col class="flex justify-end">
-                <v-btn :href="route('items.stocks.export.xlsx')" variant="tonal" color="blue-darken-2">Download Spreadsheet</v-btn>
+                <v-btn :href="route('items.stocks.export.xlsx')" variant="tonal" color="blue-darken-2">Download
+                    Spreadsheet</v-btn>
             </v-col>
         </v-row>
-        
+
         <!-- Edit Stock Dialog -->
-        <v-dialog max-width="800" v-model="showStockEditDialog">
+        <v-dialog v-model="showStockEditDialog" max-width="800">
             <v-card>
                 <v-card-title class="text-center">Sunting Stok</v-card-title>
                 <v-divider />
                 <v-card-text>
                     <v-form ref="stockEditFormRef">
-                        <v-select
-                            v-model="stockEditForm.item_id"
-                            :items="items"
-                            item-title="name"
-                            item-value="id"
-                            label="Barang"
-                            density="comfortable"
-                            :rules="stockFormRule.item_id"
-                            :error-messages="stockEditForm.errors.item_id"
-                        />
-                        <v-select
-                            v-model="stockEditForm.unit_id"
-                            :items="units"
-                            item-title="name"
-                            item-value="id"
-                            label="Unit Ukuran"
-                            density="comfortable"
-                            :rules="stockFormRule.unit_id"
-                            :error-messages="stockEditForm.errors.unit_id"
-                        />
-                        <v-text-field
-                            v-model="stockEditForm.quantity"
-                            label="Jumlah"
-                            type="number"
-                            density="comfortable"
-                            :rules="stockFormRule.quantity"
-                            :error-messages="stockEditForm.errors.quantity"
-                        />
+                        <v-select v-model="stockEditForm.item_id" :items="items" item-title="name" item-value="id"
+                            label="Barang" density="comfortable" :rules="stockFormRule.item_id"
+                            :error-messages="stockEditForm.errors.item_id" />
+                        <v-select v-model="stockEditForm.unit_id" :items="units" item-title="name" item-value="id"
+                            label="Unit Ukuran" density="comfortable" :rules="stockFormRule.unit_id"
+                            :error-messages="stockEditForm.errors.unit_id" />
+                        <v-text-field v-model="stockEditForm.quantity" label="Jumlah" type="number"
+                            density="comfortable" :rules="stockFormRule.quantity"
+                            :error-messages="stockEditForm.errors.quantity" />
                     </v-form>
                 </v-card-text>
                 <v-card-actions>
                     <v-btn @click="showStockEditDialog = false">Cancel</v-btn>
-                    <v-btn color="blue-darken-4" :disabled="disableStockEditSubmit"
-                        @click="submitStockEditForm">
+                    <v-btn color="blue-darken-4" :disabled="disableStockEditSubmit" @click="submitStockEditForm">
                         <span v-if="!disableStockEditSubmit">Update</span>
                         <span v-else>
                             <v-progress-circular indeterminate size="20" />
@@ -240,30 +203,27 @@ const getUnitName = (unitId) => {
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        
+
         <!-- Desktop Table View -->
         <v-row class="hidden! md:block!">
             <v-col>
-                <v-data-table 
-                    :headers="[
-                        { title: 'No', key: 'no', width: '80px' },
-                        { title: 'Barang', key: 'item_name' },
-                        { title: 'Jumlah', key: 'quantity', width: '150px' },
-                        { title: 'Unit', key: 'unit_name', width: '150px' },
-                        { title: 'More', key: 'more', width: '100px', align: 'center' }
-                    ]" 
-                    :items="stocks.map((stock, index) => ({ 
-                        no: index + 1, 
+                <v-data-table :headers="[
+                    { title: 'No', key: 'no', width: '80px' },
+                    { title: 'Barang', key: 'item_name' },
+                    { title: 'Jumlah', key: 'quantity', width: '150px' },
+                    { title: 'Unit', key: 'unit_name', width: '150px' },
+                    { title: 'More', key: 'more', width: '100px', align: 'center' }
+                ]" :items="stocks.map((stock, index) => ({
+                        no: index + 1,
                         item_name: getItemName(stock.item_id),
                         quantity: stock.quantity,
                         unit_name: getUnitName(stock.unit_id),
                         more: stock.id,
-                        fullData: stock 
-                    }))"
-                    class="hidden! md:block!">
+                        fullData: stock
+                    }))" class="hidden! md:block!">
                     <template #headers="{ headers }">
                         <tr class="bg-blue-darken-2">
-                            <th v-for="i in (headers.at(0).length)" :key="i" 
+                            <th v-for="i in (headers.at(0).length)" :key="i"
                                 :style="headers.at(0).at(i - 1).width ? `width: ${headers.at(0).at(i - 1).width}` : ''"
                                 :class="headers.at(0).at(i - 1).align === 'center' ? 'text-center' : ''">
                                 {{ headers.at(0).at(i - 1).title }}
@@ -276,26 +236,26 @@ const getUnitName = (unitId) => {
                                 <v-icon icon="mdi-dots-vertical" />
                                 <v-menu activator="parent">
                                     <v-list density="compact">
-                                        <v-list-item 
-                                            value="edit" 
-                                            @click="openEditDialog(item.fullData)">
+                                        <v-list-item value="edit" @click="openEditDialog(item.fullData)">
                                             <v-icon icon="mdi-pencil" class="mr-2" />
                                             Sunting
                                         </v-list-item>
                                         <v-list-item value="delete">
                                             <v-icon icon="mdi-delete" class="mr-2" />
                                             Hapus
-                                            <v-dialog activator="parent" max-width="400" v-slot="{ isActive }">
+                                            <v-dialog v-slot="{ isActive }" activator="parent" max-width="400">
                                                 <v-card>
                                                     <v-card-title
                                                         class="text-wrap text-center bg-blue-darken-2">Konfirmasi!</v-card-title>
                                                     <v-card-text>
                                                         <div>Apakah yakin untuk menghapus stok <span
-                                                                class="text-blue-600">{{ item.item_name }}</span> dengan jumlah <span
-                                                                class="text-blue-600">{{ item.quantity }} {{ item.unit_name }}</span>?</div>
+                                                                class="text-blue-600">{{ item.item_name }}</span> dengan
+                                                            jumlah <span class="text-blue-600">{{ item.quantity }} {{
+                                                                item.unit_name }}</span>?</div>
                                                     </v-card-text>
                                                     <v-card-actions>
-                                                        <v-btn @click="deleteStock(item.more); isActive.value = false">Ya</v-btn>
+                                                        <v-btn
+                                                            @click="deleteStock(item.more); isActive.value = false">Ya</v-btn>
                                                         <v-btn @click="isActive.value = false">Batal</v-btn>
                                                     </v-card-actions>
                                                 </v-card>
@@ -309,7 +269,7 @@ const getUnitName = (unitId) => {
                 </v-data-table>
             </v-col>
         </v-row>
-        
+
         <!-- Mobile Card View -->
         <v-row class="md:hidden!">
             <v-col>
@@ -321,26 +281,29 @@ const getUnitName = (unitId) => {
                                     <v-icon icon="mdi-dots-vertical" />
                                     <v-menu activator="parent">
                                         <v-list density="compact">
-                                            <v-list-item 
-                                                value="edit" 
-                                                @click="openEditDialog(stock)">
+                                            <v-list-item value="edit" @click="openEditDialog(stock)">
                                                 <v-icon icon="mdi-pencil" class="mr-2" />
                                                 Sunting
                                             </v-list-item>
                                             <v-list-item value="delete">
                                                 <v-icon icon="mdi-delete" class="mr-2" />
                                                 Hapus
-                                                <v-dialog activator="parent" max-width="400" v-slot="{ isActive }">
+                                                <v-dialog v-slot="{ isActive }" activator="parent" max-width="400">
                                                     <v-card>
                                                         <v-card-title
                                                             class="text-wrap text-center bg-blue-darken-2">Konfirmasi!</v-card-title>
                                                         <v-card-text>
                                                             <div>Apakah yakin untuk menghapus stok <span
-                                                                    class="text-blue-600">{{ getItemName(stock.item_id) }}</span> dengan jumlah <span
-                                                                    class="text-blue-600">{{ stock.quantity }} {{ getUnitName(stock.unit_id) }}</span>?</div>
+                                                                    class="text-blue-600">{{ getItemName(stock.item_id)
+                                                                    }}</span> dengan jumlah <span
+                                                                    class="text-blue-600">{{
+                                                                    stock.quantity }} {{ getUnitName(stock.unit_id)
+                                                                    }}</span>?
+                                                            </div>
                                                         </v-card-text>
                                                         <v-card-actions>
-                                                            <v-btn @click="deleteStock(stock.id); isActive.value = false">Ya</v-btn>
+                                                            <v-btn
+                                                                @click="deleteStock(stock.id); isActive.value = false">Ya</v-btn>
                                                             <v-btn @click="isActive.value = false">Batal</v-btn>
                                                         </v-card-actions>
                                                     </v-card>
@@ -371,7 +334,7 @@ const getUnitName = (unitId) => {
                         </v-card>
                     </v-col>
                 </v-row>
-                
+
                 <v-row v-if="!stocks || stocks.length === 0">
                     <v-col>
                         <v-card>

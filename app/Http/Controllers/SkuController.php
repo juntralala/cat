@@ -57,9 +57,10 @@ class SkuController extends Controller
             $sku->update(
                 $safe->only(
                     'item_id',
+                    'sku',
                     'spesification_name',
                     'quantity',
-                    'price',
+                    'price'
                 )
             );
             $sku->skuMeasurementUnitConversions()->delete();

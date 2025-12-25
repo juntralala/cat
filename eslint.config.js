@@ -1,9 +1,18 @@
+// eslint.config.js
+import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import vue from 'eslint-plugin-vue';
 
-export default defineConfigWithVueTs(
-    vue.configs['flat/essential'],
-    vueTsConfigs.recommended,
+export default [
+    js.configs.recommended,
+    ...vue.configs['flat/recommended'],
+    {
+        files: ['**/*.{js,mjs,cjs,vue}'],
+        languageOptions: {
+            ecmaVersion: 'latest',
+            sourceType: 'module',
+        },
+    },
     {
         ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'resources/js/components/ui/*'],
     },
@@ -13,4 +22,4 @@ export default defineConfigWithVueTs(
         },
     },
     prettier,
-);
+];

@@ -70,7 +70,8 @@ onUpdated(function () {
             </v-app-bar-title>
             <template #append>
                 <v-avatar id="profile-avatar">
-                    <img v-if="page.props.auth?.user?.profile_photo_path"
+                    <img
+v-if="page.props.auth?.user?.profile_photo_path"
                         :src="page.props.auth?.user?.profile_photo_path" alt="alt">
                     <v-icon v-else class="cursor-pointer" icon="mdi-account" size="x-large" />
                 </v-avatar>
@@ -94,7 +95,7 @@ onUpdated(function () {
             </template>
         </v-app-bar>
         <v-navigation-drawer v-model="showDrawer">
-            <v-list color="blue" v-model:selected="selectedMenu" v-model:opened="expandedGroups" mandatory>
+            <v-list v-model:selected="selectedMenu" v-model:opened="expandedGroups" color="blue" mandatory>
                 <Link :href="route('home')">
                 <v-list-item value="home">
                     <div class="flex items-baseline gap-1">
@@ -176,14 +177,14 @@ onUpdated(function () {
                         </div>
                     </v-list-item>
                     </Link>
-                    <Link :href="route('users')" v-if="user?.role?.name == 'admin'">
+                    <Link v-if="user?.role?.name == 'admin'" :href="route('users')">
                     <v-list-item value="users">
                         <div class="flex items-baseline gap-1"><v-icon icon="mdi-account-group" /><span>Akun</span>
                         </div>
                     </v-list-item>
                     </Link>
                 </v-list-group>
-                <Link :href="route('settings')" v-if="user.role.name == 'admin'">
+                <Link v-if="user.role.name == 'admin'" :href="route('settings')">
                 <v-list-item value="settings">
                     <v-icon icon="mdi-cog"></v-icon> Pengaturan
                 </v-list-item>

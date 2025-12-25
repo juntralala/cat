@@ -22,20 +22,18 @@ class TransactionHistoryController extends Controller
         $endDate = $request->input('end_date');
         return Transaction::with([
             'recipient:id,name,division',
-            'transactionDetails.item:id,name',
-            'transactionDetails.unit:id,name'
+            'transactionItems.sku.item:id,name',
+            'transactionItems.unit:id,name'
         ])->when($search, function ($query, $search) {
             $query->where(function ($q) use ($search) {
                 $q->where('supplier', 'like', "%{$search}%")
                     ->orWhere('division', 'like', "%{$search}%")
                     ->orWhere('notes', 'like', "%{$search}%")
-                    // Cari di tabel recipient (relasi)
                     ->orWhereHas('recipient', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
                             ->orWhere('division', 'like', "%{$search}%");
                     })
-                    // Cari di tabel items melalui transaction_details (relasi nested)
-                    ->orWhereHas('transactionDetails.item', function ($q) use ($search) {
+                    ->orWhereHas('transactionItems.sku.item', function($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%");
                     });
             });
@@ -69,29 +67,37 @@ class TransactionHistoryController extends Controller
 
         // header
         $sheet->fromArray(source: [
-            'ID',
+            'No',
             'Tipe',
             'Tanggal Transaksi',
             'Penerima/Pemasok',
             'Divisi',
-            'Item',
-            'Unit',
+            'Barang',
+            'SKU',
+            'Satuan',
             'Jumlah',
             'Catatan',
         ], nullValue: null, startCell: 'A1');
 
         // data
+        $no = 0;
         foreach ($transactions as $index => $transaction) {
-            foreach ($transaction->transactionDetails as $detail) {
+            foreach ($transaction->transactionItems as $transactionItem) {
                 $sheet->fromArray(source: [
-                    $transaction->id,
-                    $transaction->type == 'in' ? 'Masuk' : 'Keluar',
+                    ++$no,
+                    match($transaction->type) {
+                        'in' => "Masuk",
+                        'out' => "Keluar",
+                        '' => "Kosong",
+                        default => "Invalid Data"
+                    },
                     $transaction->transaction_date->format('Y-m-d'),
                     $transaction->recipient?->name ?? $transaction->supplier,
                     $transaction->recipient?->division ?? $transaction->division,
-                    $detail->item->name,
-                    $detail->unit->name,
-                    $detail->quantity,
+                    $transactionItem->sku->item->name,
+                    $transactionItem->sku->sku,
+                    $transactionItem->unit->name,
+                    $transactionItem->quantity,
                     $transaction->notes,
                 ], nullValue: null, startCell: 'A' . (2 + $index)); // mulai dari baris ke-2
             }

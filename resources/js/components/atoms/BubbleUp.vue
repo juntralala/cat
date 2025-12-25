@@ -24,7 +24,8 @@ defineProps({
 </script>
 
 <template>
-    <div class="rounded-2xl" :style="{
+    <div
+class="rounded-2xl" :style="{
         position: 'absolute',
         opacity: 0,
         left: left,

@@ -2,6 +2,7 @@
 import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import { ref, computed, watch, watchEffect } from 'vue';
 import { router } from '@inertiajs/vue3';
+import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
 
 defineOptions({
     layout: ApplicationLayout
@@ -26,11 +27,11 @@ const currentPage = ref(props.transactions.current_page);
 const isExporting = ref(false);
 
 const headers = [
-    { title: 'Tanggal', key: 'transaction_date', sortable: true },
-    { title: 'Tipe', key: 'type', sortable: true },
+    { title: 'Tanggal', key: 'transaction_date', sortable: false },
+    { title: 'Tipe', key: 'type', sortable: false },
     { title: 'Supplier/Penerima', key: 'party', sortable: false },
-    { title: 'Divisi', key: 'division', sortable: true },
-    { title: 'Total Item', key: 'total_items', sortable: true },
+    { title: 'Divisi', key: 'division', sortable: false },
+    { title: 'Total Jenis Barang', key: 'total_items', sortable: false },
     { title: 'Catatan', key: 'notes', sortable: false },
     { title: 'Aksi', key: 'actions', sortable: false, align: 'center' }
 ];
@@ -192,7 +193,7 @@ function exportToXlsx() {
                                 </p>
                             </div>
                         </v-col>
-                        <v-col cols="12" md="6" v-if="selectedTransaction.type === 'out'">
+                        <v-col v-if="selectedTransaction.type === 'out'" cols="12" md="6">
                             <div class="mb-4">
                                 <p class="text-caption text-grey-darken-1 mb-1">Divisi</p>
                                 <p class="text-body-1 font-weight-medium">
@@ -220,16 +221,20 @@ function exportToXlsx() {
                             <tr>
                                 <th>No</th>
                                 <th>Nama Barang</th>
+                                <th>SKU</th>
                                 <th>Satuan</th>
+                                <th>Harga Satuan</th>
                                 <th class="text-right">Jumlah</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(detail, index) in selectedTransaction.transaction_details" :key="detail.id">
+                            <tr v-for="(items, index) in selectedTransaction.transaction_items" :key="items.id">
                                 <td>{{ index + 1 }}</td>
-                                <td>{{ detail.item?.name }}</td>
-                                <td>{{ detail.unit?.name }}</td>
-                                <td class="text-right font-weight-bold">{{ detail.quantity }}</td>
+                                <td>{{ items.sku?.item?.name }}</td>
+                                <td>{{ items.sku?.sku }}</td>
+                                <td>{{ items.unit?.name }}</td>
+                                <td>{{ items.price }}</td>
+                                <td class="text-right font-weight-bold">{{ items.quantity }}</td>
                             </tr>
                         </tbody>
                     </v-table>
@@ -237,7 +242,7 @@ function exportToXlsx() {
 
                 <v-card-actions class="pa-6 pt-0">
                     <v-spacer></v-spacer>
-                    <v-btn @click="closeDetail" color="grey" variant="flat">
+                    <v-btn color="grey" variant="flat" @click="closeDetail">
                         Tutup
                     </v-btn>
                 </v-card-actions>
@@ -245,18 +250,18 @@ function exportToXlsx() {
         </v-dialog>
 
         <!-- Header -->
-        <v-list>
+        <v-list class="pt-0!">
             <v-list-item>
                 <v-row align="center">
-                    <v-col>
-                        <h1 class="text-4xl font-medium">Riwayat <span class="text-blue-accent-3">Transaksi</span></h1>
+                    <v-col class="pt-0">
+                        <PageTitleHighlightPart first-part-title="Riwayat" second-part-title="Transaksi" />
                     </v-col>
                     <v-col cols="auto">
                         <v-tooltip>
                             <template #activator="{ props }">
-                                <v-btn v-bind="props" @click="exportToXlsx" color="blue-accent-3" variant="tonal"
-                                    :loading="isExporting"
-                                    :disabled="!transactions.data || transactions.data.length === 0">
+                                <v-btn v-bind="props" color="blue-accent-3" variant="tonal" :loading="isExporting"
+                                    :disabled="!transactions.data || transactions.data.length === 0"
+                                    @click="exportToXlsx">
                                     <v-icon icon="mdi-download" start></v-icon>
                                     Unduh SpreadSheet
                                 </v-btn>
@@ -290,13 +295,13 @@ function exportToXlsx() {
                     <v-col cols="12" md="5">
                         <v-menu v-model="menuStartDate" :close-on-content-click="false" transition="scale-transition"
                             min-width="auto">
-                            <template v-slot:activator="{ props: menuProps }">
+                            <template #activator="{ props: menuProps }">
                                 <v-text-field v-model="formattedStartDate" density="comfortable" label="Tanggal Mulai"
                                     readonly v-bind="menuProps" prepend-inner-icon="mdi-calendar" variant="outlined"
                                     clearable @click:clear="startDate = ''" />
                             </template>
-                            <v-date-picker v-model="startDate" @update:model-value="menuStartDate = false" locale="id"
-                                hide-header header="Pilih Tanggal Mulai" />
+                            <v-date-picker v-model="startDate" locale="id" hide-header header="Pilih Tanggal Mulai"
+                                @update:model-value="menuStartDate = false" />
                         </v-menu>
                     </v-col>
 
@@ -304,21 +309,21 @@ function exportToXlsx() {
                     <v-col cols="12" md="5">
                         <v-menu v-model="menuEndDate" :close-on-content-click="false" transition="scale-transition"
                             min-width="auto">
-                            <template v-slot:activator="{ props: menuProps }">
+                            <template #activator="{ props: menuProps }">
                                 <v-text-field v-model="formattedEndDate" density="comfortable" label="Tanggal Akhir"
                                     readonly v-bind="menuProps" prepend-inner-icon="mdi-calendar" variant="outlined"
                                     clearable @click:clear="endDate = ''" />
                             </template>
-                            <v-date-picker v-model="endDate" @update:model-value="menuEndDate = false" locale="id"
-                                hide-header header="Pilih Tanggal Akhir" />
+                            <v-date-picker v-model="endDate" locale="id" hide-header header="Pilih Tanggal Akhir"
+                                @update:model-value="menuEndDate = false" />
                         </v-menu>
                     </v-col>
 
                     <!-- Clear Filters Button -->
-                    <v-col cols="12" md="2" class="d-flex align-center">
-                        <v-btn @click="clearFilters" color="grey" variant="outlined" block>
+                    <v-col cols="12" md="2" class="d-flex align-center mb-5">
+                        <v-btn color="grey" variant="outlined" block @click="clearFilters">
                             <v-icon icon="mdi-filter-remove" start></v-icon>
-                            Reset
+                            <span class="ms-1">Reset</span>
                         </v-btn>
                     </v-col>
                 </v-row>
@@ -328,12 +333,12 @@ function exportToXlsx() {
             <v-list-item>
                 <v-data-table :headers="headers" :items="transactions.data" :items-per-page="15" class="elevation-1">
                     <!-- Transaction Date -->
-                    <template v-slot:item.transaction_date="{ item }">
+                    <template #item.transaction_date="{ item }">
                         <span class="font-weight-medium">{{ formatDate(item.transaction_date) }}</span>
                     </template>
 
                     <!-- Type Badge -->
-                    <template v-slot:item.type="{ item }">
+                    <template #item.type="{ item }">
                         <v-chip :color="item.type === 'in' ? 'blue-accent-3' : 'red-accent-3'" size="small"
                             variant="tonal">
                             <v-icon :icon="item.type === 'in' ? 'mdi-arrow-down-bold' : 'mdi-arrow-up-bold'" start
@@ -343,32 +348,32 @@ function exportToXlsx() {
                     </template>
 
                     <!-- Party (Supplier/Recipient) -->
-                    <template v-slot:item.party="{ item }">
+                    <template #item.party="{ item }">
                         {{ getPartyName(item) }}
                     </template>
 
                     <!-- Division -->
-                    <template v-slot:item.division="{ item }">
+                    <template #item.division="{ item }">
                         {{ item.division || '-' }}
                     </template>
 
                     <!-- Total Items -->
-                    <template v-slot:item.total_items="{ item }">
+                    <template #item.total_items="{ item }">
                         <v-chip size="small" variant="tonal">
-                            {{ item.transaction_details?.length || 0 }} item
+                            {{ item.transaction_items?.length || 0 }} jenis
                         </v-chip>
                     </template>
 
                     <!-- Notes -->
-                    <template v-slot:item.notes="{ item }">
+                    <template #item.notes="{ item }">
                         <span class="text-truncate d-inline-block" style="max-width: 200px;">
                             {{ item.notes || '-' }}
                         </span>
                     </template>
 
                     <!-- Actions -->
-                    <template v-slot:item.actions="{ item }">
-                        <v-btn @click="showDetail(item)" icon size="small" variant="text">
+                    <template #item.actions="{ item }">
+                        <v-btn icon size="small" variant="text" @click="showDetail(item)">
                             <v-icon icon="mdi-eye"></v-icon>
                         </v-btn>
                     </template>
@@ -379,7 +384,7 @@ function exportToXlsx() {
 
             <!-- Pagination -->
             <v-list-item v-if="transactions.last_page > 1" class="mt-4">
-                <v-pagination :length="transactions.last_page" v-model="currentPage" total-visible="7" />
+                <v-pagination v-model="currentPage" :length="transactions.last_page" total-visible="7" />
             </v-list-item>
         </v-list>
     </v-container>

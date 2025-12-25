@@ -3,13 +3,17 @@ import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
+import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
 
 defineOptions({
     layout: ApplicationLayout
 });
 
 const props = defineProps({
-    units: Array
+    units: {
+        type: Array,
+        default: []
+    }
 });
 const baseUnits = props.units.filter(unit => unit.is_base == true);
 
@@ -122,7 +126,7 @@ const closeErrorDialog = () => {
                     <p class="text-body-1">{{ errorMessage }}</p>
                 </v-card-text>
                 <v-card-actions class="justify-center pb-6">
-                    <v-btn @click="closeErrorDialog" color="error" variant="flat">
+                    <v-btn color="error" variant="flat" @click="closeErrorDialog">
                         Tutup
                     </v-btn>
                 </v-card-actions>
@@ -131,13 +135,13 @@ const closeErrorDialog = () => {
 
         <v-row>
             <v-col>
-                <h1 class="font-semibold text-3xl">Data <span class="text-blue-darken-2">Unit Ukuran</span></h1>
+                <PageTitleHighlightPart first-part-title="Data" second-part-title="Unit Satuan" />
             </v-col>
         </v-row>
 
         <v-row>
             <v-col>
-                <v-btn variant="tonal" color="primary" @click="openAddDialog" prepend-icon="mdi-plus">
+                <v-btn variant="tonal" color="primary" prepend-icon="mdi-plus" @click="openAddDialog">
                     Tambah Unit Ukuran
                 </v-btn>
             </v-col>
@@ -169,7 +173,7 @@ const closeErrorDialog = () => {
                                         <v-list-item value="delete">
                                             <v-icon icon="mdi-delete" class="mr-2" />
                                             Hapus
-                                            <v-dialog activator="parent" max-width="400" v-slot="{ isActive }">
+                                            <v-dialog v-slot="{ isActive }" activator="parent" max-width="400">
                                                 <v-card>
                                                     <v-card-title class="text-center">Konfirmasi!</v-card-title>
                                                     <v-card-text>
@@ -241,10 +245,10 @@ const closeErrorDialog = () => {
 
                 <v-card-actions>
                     <v-spacer></v-spacer>
-                    <v-btn color="grey-darken-1" variant="text" @click="closeDialog" :disabled="form.processing">
+                    <v-btn color="grey-darken-1" variant="text" :disabled="form.processing" @click="closeDialog">
                         Batal
                     </v-btn>
-                    <v-btn color="primary" variant="tonal" @click="submitForm" :loading="form.processing">
+                    <v-btn color="primary" variant="tonal" :loading="form.processing" @click="submitForm">
                         {{ editingId ? 'Perbarui' : 'Simpan' }}
                     </v-btn>
                 </v-card-actions>

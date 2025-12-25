@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MeasurementUnit;
+use App\Models\Sku;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -62,5 +63,27 @@ class MeasurementUnitController extends Controller
         $unit = MeasurementUnit::findOrFail($id);
         $unit->restore();
         return redirect()->back();
+    }
+
+    public function getSupportedMueasurementUnitsBySkuId(Request $request, $skuId) {
+        $sku = Sku::with("skuMeasurementUnitConversions")
+            ->findOrFail($skuId, ['id', 'item_id']);
+        $baseMeasurementUnit = $sku->item
+            ->baseMeasurementUnit()
+            ->with('derivedMeasurementUnits')
+            ->first();
+        $allMeasurementUnits = collect([$baseMeasurementUnit])
+            ->merge($baseMeasurementUnit->derivedMeasurementUnits)
+            ->merge($sku->skuMeasurementUnitConversions->map(function($conversion) {
+                return [
+                    'id' => $conversion->measurement_unit_id,
+                    'name'=> $conversion->unit->name,
+                    'conversion' => $conversion->conversion
+                ];
+            }))
+            ->values();
+        return response()->json([
+            'data' => $allMeasurementUnits
+        ]);
     }
 }

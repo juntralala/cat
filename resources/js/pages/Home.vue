@@ -6,7 +6,7 @@ defineOptions({
     layout: ApplicationLayout
 });
 
-const props = defineProps({
+defineProps({
     totalItems: Number,
     totalStockValue: Number,
     lowStockItems: Number,
@@ -50,7 +50,7 @@ function viewStock() {
         <!-- Header -->
         <v-row class="mb-4">
             <v-col>
-                <h1 class="text-4xl font-medium">Dashboard <span class="text-blue-darken-2">Inventory</span></h1>
+                <PageTitleHighlightPart first-part-title="Barang" second-part-title="Masuk"/>
                 <p class="text-grey-darken-1 mt-2">Ringkasan dan statistik sistem inventory</p>
             </v-col>
         </v-row>
@@ -170,7 +170,7 @@ function viewStock() {
                                 :key="alert.id"
                                 class="border-b"
                             >
-                                <template v-slot:prepend>
+                                <template #prepend>
                                     <v-avatar color="blue-lighten-4" size="40">
                                         <v-icon icon="mdi-package-variant" color="blue-darken-2"></v-icon>
                                     </v-avatar>
@@ -252,7 +252,7 @@ function viewStock() {
                                 :key="item.id"
                                 class="border-b"
                             >
-                                <template v-slot:prepend>
+                                <template #prepend>
                                     <v-avatar :color="index === 0 ? 'blue-darken-3' : index === 1 ? 'blue-darken-1' : 'blue'" size="32">
                                         <span class="font-weight-bold text-white">{{ index + 1 }}</span>
                                     </v-avatar>
@@ -290,7 +290,7 @@ function viewStock() {
                                 :key="index"
                                 class="border-b"
                             >
-                                <template v-slot:prepend>
+                                <template #prepend>
                                     <v-avatar 
                                         :color="index === 0 ? 'blue-darken-3' : index === 1 ? 'blue-darken-1' : index === 2 ? 'blue' : 'blue-lighten-2'" 
                                         size="48"
@@ -316,7 +316,7 @@ function viewStock() {
                                     </v-chip>
                                 </v-list-item-subtitle>
 
-                                <template v-slot:append>
+                                <template #append>
                                     <div class="text-right" style="min-width: 200px;">
                                         <p class="text-caption text-grey-darken-1 mb-1">Barang Terbanyak:</p>
                                         <p class="font-weight-bold text-body-2">{{ division.top_item }}</p>

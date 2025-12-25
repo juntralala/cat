@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property \Illuminate\Database\Eloquent\Collection<\App\Models\SkuMeasurementUnitConversion> $skuMeasurementUnitConversions
+ */
 class Sku extends Model
 {
     use HasUuids, SoftDeletes;
@@ -36,7 +40,7 @@ class Sku extends Model
 
     protected $with = ['item'];
 
-    public function item()
+    public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class, 'item_id', 'id');
     }

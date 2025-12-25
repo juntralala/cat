@@ -2,6 +2,7 @@
 import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import { ref, computed } from 'vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
+import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
 
 defineOptions({
   layout: ApplicationLayout
@@ -12,7 +13,6 @@ const props = defineProps({
 });
 
 const page = usePage();
-const currentUser = computed(() => page.props.auth.user); // untuk akses beberapa fitur yang memerlukan role khusus
 
 const recipientAddForm = ref({
   name: null,
@@ -146,7 +146,7 @@ async function submitRecipientEditForm() {
   <v-container>
     <v-row>
       <v-col>
-        <h1 class="text-4xl font-medium">Kelola <span class="text-blue-accent-3">Penerima</span></h1>
+        <PageTitleHighlightPart first-part-title="Kelola" second-part-title="Penerima" />
       </v-col>
     </v-row>
     <v-row>
@@ -156,7 +156,7 @@ async function submitRecipientEditForm() {
             <v-icon icon="mdi-account-multiple-plus" />
             Tambah penerima
           </span>
-          <v-dialog activator="parent" max-width="800" v-slot="{ isActive }" v-model="showRecipientAddDialog">
+          <v-dialog v-slot="{ isActive }" v-model="showRecipientAddDialog" activator="parent" max-width="800">
             <v-card>
               <v-card-title class="text-center">Form Tambah Penerima</v-card-title>
               <v-divider />
@@ -164,8 +164,8 @@ async function submitRecipientEditForm() {
                 <v-form ref="recipientAddFormRef">
                   <v-text-field v-model="recipientAddForm.name" label="Nama Lengkap" density="comfortable"
                     :rules="recipientAddFormRule.name" />
-                  <v-text-field v-model="recipientAddForm.nickname" label="Nama Panggilan (Opsional)" density="comfortable"
-                    :rules="recipientAddFormRule.nickname" />
+                  <v-text-field v-model="recipientAddForm.nickname" label="Nama Panggilan (Opsional)"
+                    density="comfortable" :rules="recipientAddFormRule.nickname" />
                   <v-text-field v-model="recipientAddForm.division" density="comfortable"
                     :rules="recipientAddFormRule.division" label="Divisi (Opsional)" />
                 </v-form>
@@ -186,7 +186,7 @@ async function submitRecipientEditForm() {
     </v-row>
 
     <!-- Edit Recipient Dialog -->
-    <v-dialog max-width="800" v-model="showRecipientEditDialog">
+    <v-dialog v-model="showRecipientEditDialog" max-width="800">
       <v-card>
         <v-card-title class="text-center">Form Sunting Penerima</v-card-title>
         <v-divider />
@@ -196,8 +196,8 @@ async function submitRecipientEditForm() {
               :rules="recipientEditFormRule.name" />
             <v-text-field v-model="recipientEditForm.nickname" label="Nama Panggilan (Opsional)" density="comfortable"
               :rules="recipientEditFormRule.nickname" />
-            <v-select v-model="recipientEditForm.division" density="comfortable"
-              :rules="recipientEditFormRule.division" label="Divisi (Opsional)" clearable />
+            <v-select v-model="recipientEditForm.division" density="comfortable" :rules="recipientEditFormRule.division"
+              label="Divisi (Opsional)" clearable />
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -243,12 +243,12 @@ async function submitRecipientEditForm() {
                   <v-list-item value="delete">
                     <v-icon icon="mdi-delete" class="mr-2" />
                     Hapus
-                    <v-dialog activator="parent" max-width="400" v-slot="{ isActive }">
+                    <v-dialog v-slot="{ isActive }" activator="parent" max-width="400">
                       <v-card>
                         <v-card-title class="text-wrap text-center bg-blue-darken-2">Konfirmasi!</v-card-title>
                         <v-card-text>
                           <div>Apakah yakin untuk menghapus penerima dengan nama <span class="text-blue-600">{{
-                              item.name }}</span>?</div>
+                            item.name }}</span>?</div>
                         </v-card-text>
                         <v-card-actions>
                           <v-btn @click="deleteRecipient(item.more); isActive.value = false">Ya</v-btn>
@@ -283,12 +283,12 @@ async function submitRecipientEditForm() {
                       <v-list-item value="delete">
                         <v-icon icon="mdi-delete" class="mr-2" />
                         Hapus
-                        <v-dialog activator="parent" max-width="400" v-slot="{ isActive }">
+                        <v-dialog v-slot="{ isActive }" activator="parent" max-width="400">
                           <v-card>
                             <v-card-title class="text-wrap text-center bg-blue-darken-2">Konfirmasi!</v-card-title>
                             <v-card-text>
                               <div>Apakah yakin untuk menghapus penerima dengan nama <span class="text-blue-600">{{
-                                  recipient.name }}</span>?</div>
+                                recipient.name }}</span>?</div>
                             </v-card-text>
                             <v-card-actions>
                               <v-btn @click="deleteRecipient(recipient.more); isActive.value = false">Ya</v-btn>

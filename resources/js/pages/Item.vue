@@ -3,6 +3,7 @@ import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import { ref } from 'vue';
 import { useForm, Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
+import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
 
 defineOptions({
     layout: ApplicationLayout
@@ -98,7 +99,7 @@ const deleteItem = (id) => {
     <v-container>
         <v-row>
             <v-col>
-                <h1 class="text-4xl font-medium">Kelola <span class="text-blue-accent-3">Barang</span></h1>
+                <PageTitleHighlightPart first-part-title="Kelola" second-part-title="Barang"/>
             </v-col>
         </v-row>
         <v-row>

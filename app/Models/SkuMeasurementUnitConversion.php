@@ -19,9 +19,11 @@ class SkuMeasurementUnitConversion extends Model
 
     protected $fillable = [
         "measurement_unit_id",
-        "item_sku_id",
+        "sku_id",
         "conversion"
     ];
+
+    protected $with = ['unit'];
 
     public function unit(): BelongsTo  {
         return $this->belongsTo(MeasurementUnit::class, 'measurement_unit_id', 'id');

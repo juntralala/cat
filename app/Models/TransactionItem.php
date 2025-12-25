@@ -4,8 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property \App\Models\MeasurementUnit $unit
+ */
 class TransactionItem extends Model
 {
     use HasUuids, SoftDeletes;
@@ -22,33 +26,34 @@ class TransactionItem extends Model
 
     protected $fillable = [
         'transaction_id',
-        'item_sku_id',
-        'unit_id',
+        'sku_id',
+        'measurement_unit_id',
         'price',
         'quantity',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
+        'price' => 'double',
     ];
 
     protected $with = [
-        'itemSku',
+        'sku',
         'unit',
     ];
 
-    public function transaction()
+    public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class, 'transaction_id', 'id');
     }
 
-    public function itemSku()
+    public function sku(): BelongsTo
     {
         return $this->belongsTo(Sku::class, 'sku_id', 'id');
     }
 
-    public function unit()
+    public function unit(): BelongsTo
     {
-        return $this->belongsTo(MeasurementUnit::class, 'unit_id', 'id');
+        return $this->belongsTo(MeasurementUnit::class, 'measurement_unit_id', 'id');
     }
 }
