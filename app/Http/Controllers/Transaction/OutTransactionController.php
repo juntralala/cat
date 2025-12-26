@@ -6,12 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\MeasurementUnit;
 use App\Models\Recipient;
-use App\Models\Stock;
+use App\Models\Sku;
 use App\Models\Transaction;
-use App\Models\TransactionDetail;
+use App\Models\TransactionItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class OutTransactionController extends Controller
@@ -19,7 +19,7 @@ class OutTransactionController extends Controller
     public function index()
     {
         return Inertia::render('OutboundItem', [
-            'items' => Item::all(),
+            'items' => Item::with('skus')->get(),
             'measurementUnits' => MeasurementUnit::all(),
             'recipients' => Recipient::all(),
         ]);
@@ -29,82 +29,57 @@ class OutTransactionController extends Controller
     {
         // Validasi input
         $validated = $request->validate([
-            'recipient_id' => 'required',
+            'recipient_id' => 'required|string',
             'division' => 'required|string|max:255',
             'transaction_date' => 'required|date',
             'notes' => 'nullable|string',
-            'transaction_details' => 'required|array|min:1',
-            'transaction_details.*.item_id' => 'required|exists:items,id',
-            'transaction_details.*.unit_id' => 'required|exists:measurement_units,id',
-            'transaction_details.*.quantity' => 'required|integer|min:1',
+            'transaction_items' => 'required|array|min:1',
+            'transaction_items.*.sku_id' => 'required|exists:skus,id',
+            'transaction_items.*.unit_id' => 'required|exists:measurement_units,id',
+            'transaction_items.*.quantity' => 'required|integer|min:1',
         ]);
 
         try {
             DB::beginTransaction();
-
-            // Cek stok sebelum proses transaksi
-            foreach ($validated['transaction_details'] as $index => $detail) {
-                $stock = Stock::where('item_id', $detail['item_id'])
-                    ->where('unit_id', $detail['unit_id'])
-                    ->first();
-
-                // Ambil nama item untuk pesan error yang lebih jelas
-                $item = Item::find($detail['item_id']);
-                $unit = MeasurementUnit::find($detail['unit_id']);
-
-                if (!$stock) {
-                    throw new \Exception("Stok untuk barang '{$item->name}' dengan satuan '{$unit->name}' tidak ditemukan.");
-                }
-
-                if ($stock->quantity < $detail['quantity']) {
-                    throw new \Exception(
-                        "Stok tidak mencukupi untuk barang '{$item->name}'. " .
-                        "Stok tersedia: {$stock->quantity} {$unit->name}, " .
-                        "Diminta: {$detail['quantity']} {$unit->name}"
-                    );
-                }
-            }
-
-            // Jika penerima belum terdaftar, buat baru
-            $recipient = Recipient::find($validated['recipient_id']);
-            if($recipient === null) {
-                $recipient = Recipient::create([
-                    'name' => $validated['recipient_id'],
-                    'division' => $validated['division'] ?? null,
-                ]);
-                $validated['recipient_id'] = $recipient->id;
-            }
-
-            // Buat transaksi header
             $transaction = Transaction::create([
                 'type' => 'out',
                 'recipient_id' => $validated['recipient_id'],
+                'user_id' => $request->user()->id,
                 'division' => $validated['division'] ?? null,
-                'transaction_date' => $validated['transaction_date'],
+                'transaction_date' => Date::parse($validated['transaction_date']),
                 'notes' => $validated['notes'] ?? null,
             ]);
+            foreach ($validated['transaction_items'] as $item) {
+                $sku = Sku::findOrFail($item['sku_id']);
+                if ($sku->quantity < $item['quantity']) {
+                    throw new \Exception(
+                        "Stok tidak mencukupi untuk barang '{$sku->item->name}'. " .
+                        "Stok tersedia: {$sku->quantity} {$sku->item->baseMeasurementUnit->name}, " .
+                        "Diminta: {$item['quantity']} {$sku->item->name}"
+                    );
+                }
 
-            // Buat transaction details dan update stok
-            foreach ($validated['transaction_details'] as $detail) {
-                TransactionDetail::create([
+                $transactionItem = TransactionItem::create([
                     'transaction_id' => $transaction->id,
-                    'item_id' => $detail['item_id'],
-                    'unit_id' => $detail['unit_id'],
-                    'quantity' => $detail['quantity'],
+                    'sku_id' => $item['sku_id'],
+                    'measurement_unit_id' => $item['unit_id'],
+                    'quantity' => $item['quantity'],
+                    'price' => $sku->price,
                 ]);
-
-                // Update stok barang (kurangi stok untuk barang keluar)
-                $stock = Stock::where('item_id', $detail['item_id'])
-                    ->where('unit_id', $detail['unit_id'])
-                    ->first();
-
-                $stock->decrement('quantity', $detail['quantity']);
+                $unit = $transactionItem->unit;
+                if($unit->is_base) {
+                    $sku->decrement('quantity', $item['quantity']);
+                } else if ($unit->baseMeasurementUnit()->withTrashed()->exists()) {
+                    $sku->decrement('quantity', $item['quantity'] * ($unit->conversion ?? 1));
+                } else if($skuMeasurementUnitConversion = $unit->skuMeasurementUnitConversions()->where('sku_id',$item['sku_id'])->first(['conversion'])) {
+                    $conversion = $skuMeasurementUnitConversion->conversion ?? 1;
+                    $sku->decrement('quantity', $conversion * $item['quantity']);
+                } else {
+                    abort(400, "Ukuran satuan bukan satuan dasar dan tidak memiliki konversi yang terdaftar");
+                }
             }
-
             DB::commit();
-
             return redirect()->back()->with('success', 'Transaksi barang keluar berhasil disimpan');
-
         } catch (\Exception $e) {
             DB::rollBack();
 

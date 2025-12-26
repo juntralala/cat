@@ -156,7 +156,6 @@ function deleteSku(skuId) {
 
 <template>
   <AlertDialog v-model="showError" />
-
   <Head title="Unit Penyimpanan Stok"></Head>
   <v-container>
     <v-row>
@@ -232,6 +231,7 @@ function deleteSku(skuId) {
               <th>SKU</th>
               <th>Barang</th>
               <th>Nama Spesifikasi</th>
+              <th>Harga</th>
               <th>Stok</th>
               <th class="w-1/12">Tindakan</th>
             </tr>
@@ -242,7 +242,8 @@ function deleteSku(skuId) {
               <td>{{ sku.sku }}</td>
               <td>{{ sku.item.name }}</td>
               <td>{{ sku.spesification_name }}</td>
-              <td>{{ sku.quantity }}</td>
+              <td>{{ sku.price }}</td>
+              <td>{{ sku.quantity }} {{ sku.item?.base_measurement_unit?.name }}</td>
               <td>
                 <v-menu>
                   <template #activator="{ props }">

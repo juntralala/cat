@@ -15,10 +15,12 @@ class SkuController extends Controller
     public function page(Request $request): \Inertia\Response
     {
         $page = $request->integer('page', 1);
-        $skus = Sku::with('skuMeasurementUnitConversions')
+        $skus = Sku::with('item:id,name,base_measurement_unit_id')
+            ->with('item.baseMeasurementUnit:id,name')
+            ->with('skuMeasurementUnitConversions')
             ->paginate(perPage: 10, page: $page)
             ->withQueryString();
-        $items = Item::all(['id', 'name']);
+        $items = Item::with('baseMeasurementUnit:id, name')->get(['id', 'name']);
         $derivedMeasurementUnitPerSku = MeasurementUnit::where('is_base', false)
             ->whereNull('base_measurement_unit_id')
             ->whereNull('conversion')

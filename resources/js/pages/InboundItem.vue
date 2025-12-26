@@ -105,7 +105,6 @@ async function fetchSupportedMeasurementUnitBySkuId(skuId) {
   return (await axios.get(route('items.skus.units.by-sku-id', skuId))).data?.data;
 }
 
-// Watch perubahan sku_id untuk setiap item
 watch(() => form.transaction_items, async (items) => {
   for (let i = 0; i < items.length; i++) {
     const item = items[i];

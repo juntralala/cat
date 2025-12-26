@@ -75,3 +75,5 @@ Route::get('/set-session', function (Request $request) {
 Route::get('/get-session', function (Request $request) {
     return session()->all();
 });
+
+Route::inertia("/counter", "Counter");

@@ -120,7 +120,7 @@ v-if="page.props.auth?.user?.profile_photo_path"
                     </div>
                 </v-list-item>
                 </Link>
-                <Link :href="route('items.stocks')">
+                <Link v-if="false" :href="route('items.stocks')">
                 <v-list-item value="items.stocks">
                     <div class="flex items-baseline gap-1"><v-icon icon="mdi-cube-outline" /><span>Stok</span>
                     </div>

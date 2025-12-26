@@ -6,9 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Item;
 use App\Models\MeasurementUnit;
 use App\Models\Sku;
-use App\Models\Stock;
 use App\Models\Transaction;
-use App\Models\TransactionDetail;
 use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -43,6 +41,7 @@ class InTransactionController extends Controller
         try {
             $transaction = Transaction::create([
                 'type' => $validated['type'],
+                'user_id' => $request->user()->id,
                 'supplier' => $validated['supplier'],
                 'recipient_id' => null, // null untuk barang masuk
                 'transaction_date' => Date::parse($validated['transaction_date']),

@@ -1,148 +1,157 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Item;
-use App\Models\Stock;
+use App\Models\Sku;
 use App\Models\Transaction;
+use App\Models\TransactionItem;
+use App\Models\Recipient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $totalItems = Item::count();
-        $totalStockValue = Stock::sum('quantity');
-        $lowStockItems = Stock::where('quantity', '<', 10)->count();
-        $transactionsToday = Transaction::whereDate('transaction_date', today())->count();
-        $transactionsThisMonth = Transaction::whereMonth('transaction_date', now()->month)
-            ->whereYear('transaction_date', now()->year)
-            ->count();
+        // Get date range for filtering (default: last 30 days)
+        $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
+        $endDate = $request->input('end_date', now()->format('Y-m-d'));
 
-        // Recent Transactions (5 terbaru)
-        $recentTransactions = Transaction::with(['recipient:id,name', 'transactionDetails'])
+        // Summary Statistics
+        $totalItems = Item::count();
+        $totalSkus = Sku::count();
+        $lowStockSkus = Sku::where('quantity', '<=', 10)->count();
+        $totalRecipients = Recipient::count();
+
+        // Transaction Summary (last 30 days)
+        $transactionSummary = Transaction::whereBetween('transaction_date', [$startDate, $endDate])
+            ->selectRaw('
+                type,
+                COUNT(*) as total_transactions,
+                SUM(
+                    (SELECT SUM(ti.quantity * IF(ti.price, ti.price, 1))
+                     FROM transaction_items ti
+                     WHERE ti.transaction_id = transactions.id)
+                ) as total_value
+            ')
+            ->groupBy('type')
+            ->get()
+            ->keyBy('type');
+
+        $inboundCount = $transactionSummary->get('in')?->total_transactions ?? 0;
+        $outboundCount = $transactionSummary->get('out')?->total_transactions ?? 0;
+        $inboundValue = $transactionSummary->get('in')?->total_value ?? 0;
+        $outboundValue = $transactionSummary->get('out')?->total_value ?? 0;
+
+        // Recent Transactions (last 10)
+        $recentTransactions = Transaction::with(['user:id,name', 'recipient:id,name'])
+            ->withSum('transactionItems as total_value', DB::raw('quantity * price'))
             ->latest('transaction_date')
-            ->latest('created_at')
-            ->take(5)
+            ->take(10)
             ->get()
             ->map(function ($transaction) {
                 return [
                     'id' => $transaction->id,
-                    'transaction_date' => $transaction->transaction_date,
                     'type' => $transaction->type,
-                    'party' => $transaction->type === 'in'
-                        ? $transaction->supplier
-                        : $transaction->recipient?->name,
-                    'total_items' => $transaction->transactionDetails->count(),
+                    'transaction_date' => $transaction->transaction_date,
+                    'recipient' => $transaction->recipient?->name,
+                    'supplier' => $transaction->supplier,
+                    'total_value' => $transaction->total_value ?? 0,
+                    'created_by' => $transaction->user?->name,
                 ];
             });
 
-        // Top Items (barang dengan transaksi terbanyak)
-        $topItems = Item::withCount([
-            'transactionDetails' => function ($query) {
-                $query->whereHas('transaction', function ($q) {
-                    $q->whereMonth('transaction_date', now()->month)
-                        ->whereYear('transaction_date', now()->year);
-                });
-            }
-        ])
-            ->having('transaction_details_count', '>', 0)
-            ->orderBy('transaction_details_count', 'desc')
-            ->take(5)
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'id' => $item->id,
-                    'name' => $item->name,
-                    'transaction_count' => $item->transaction_details_count,
-                ];
-            });
-
-        // Monthly Transactions (bulan ini: in vs out)
-        $monthlyTransactions = Transaction::select('type', DB::raw('count(*) as count'))
-            ->whereMonth('transaction_date', now()->month)
-            ->whereYear('transaction_date', now()->year)
-            ->groupBy('type')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'type' => $item->type,
-                    'count' => $item->count,
-                    'month' => now()->format('F Y'),
-                ];
-            });
-
-        // Stock Alerts (stok menipis)
-        $stockAlerts = Stock::with(['item:id,name', 'unit:id,name'])
-            ->where('quantity', '<', 10)
+        // Low Stock Items
+        $lowStockItems = Sku::with(['item:id,name', 'item.baseMeasurementUnit:id,name'])
+            ->where('quantity', '<=', 10)
             ->orderBy('quantity', 'asc')
-            ->take(5)
+            ->take(10)
             ->get()
-            ->map(function ($stock) {
+            ->map(function ($sku) {
                 return [
-                    'id' => $stock->id,
-                    'item_name' => $stock->item->name,
-                    'unit_name' => $stock->unit->name,
-                    'quantity' => $stock->quantity,
+                    'id' => $sku->id,
+                    'sku' => $sku->sku,
+                    'item_name' => $sku->item?->name,
+                    'specification' => $sku->specification_name,
+                    'quantity' => $sku->quantity,
+                    'unit' => $sku->item?->baseMeasurementUnit?->name,
                 ];
             });
 
-        // Top Divisions (divisi yang paling banyak mengambil barang)
-        $topDivisions = Transaction::select('division')
-            ->selectRaw('count(*) as transaction_count')
+        // Top Items by Transaction Volume (last 30 days)
+        $topItems = TransactionItem::join('skus', 'transaction_items.sku_id', '=', 'skus.id')
+            ->join('items', 'skus.item_id', '=', 'items.id')
+            ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
+            ->whereBetween('transactions.transaction_date', [$startDate, $endDate])
+            ->select(
+                'items.id',
+                'items.name',
+                DB::raw('SUM(transaction_items.quantity) as total_quantity'),
+                DB::raw('COUNT(DISTINCT transaction_items.transaction_id) as transaction_count')
+            )
+            ->groupBy('items.id', 'items.name')
+            ->orderByDesc('total_quantity')
+            ->take(5)
+            ->get();
+
+        // Monthly Transaction Trend (last 6 months)
+        $monthlyTrend = Transaction::whereBetween('transaction_date', [now()->subMonths(6), now()])
+            ->selectRaw('
+                DATE_FORMAT(transaction_date, "%Y-%m") as month,
+                type,
+                COUNT(*) as count
+            ')
+            ->groupBy('month', 'type')
+            ->orderBy('month')
+            ->get()
+            ->groupBy('month')
+            ->map(function ($group) {
+                return [
+                    'inbound' => $group->where('type', 'in')->first()?->count ?? 0,
+                    'outbound' => $group->where('type', 'out')->first()?->count ?? 0,
+                ];
+            });
+
+        // Top Recipients by Transaction Count
+        $topRecipients = Transaction::join('recipients', 'transactions.recipient_id', '=', 'recipients.id')
+            ->whereBetween('transaction_date', [$startDate, $endDate])
             ->where('type', 'out')
-            ->whereNotNull('division')
-            ->where('division', '!=', '')
-            ->whereMonth('transaction_date', now()->month)
-            ->whereYear('transaction_date', now()->year)
-            ->groupBy('division')
-            ->orderBy('transaction_count', 'desc')
+            ->select(
+                'recipients.id',
+                'recipients.name',
+                DB::raw('COUNT(*) as transaction_count')
+            )
+            ->groupBy('recipients.id', 'recipients.name')
+            ->orderByDesc('transaction_count')
             ->take(5)
-            ->get()
-            ->map(function ($item) {
-                // Ambil total item yang diambil oleh divisi ini
-                $totalItems = DB::table('transaction_details')
-                    ->join('transactions', 'transaction_details.transaction_id', '=', 'transactions.id')
-                    ->where('transactions.division', $item->division)
-                    ->where('transactions.type', 'out')
-                    ->whereMonth('transactions.transaction_date', now()->month)
-                    ->whereYear('transactions.transaction_date', now()->year)
-                    ->sum('transaction_details.quantity');
+            ->get();
 
-                // Ambil barang yang paling banyak diambil oleh divisi ini
-                $topItem = DB::table('transaction_details')
-                    ->join('transactions', 'transaction_details.transaction_id', '=', 'transactions.id')
-                    ->join('items', 'transaction_details.item_id', '=', 'items.id')
-                    ->select('items.name', DB::raw('sum(transaction_details.quantity) as total_quantity'))
-                    ->where('transactions.division', $item->division)
-                    ->where('transactions.type', 'out')
-                    ->whereMonth('transactions.transaction_date', now()->month)
-                    ->whereYear('transactions.transaction_date', now()->year)
-                    ->groupBy('items.id', 'items.name')
-                    ->orderBy('total_quantity', 'desc')
-                    ->first();
-
-                return [
-                    'division' => $item->division,
-                    'transaction_count' => $item->transaction_count,
-                    'total_items' => $totalItems,
-                    'top_item' => $topItem ? $topItem->name : '-',
-                    'top_item_quantity' => $topItem ? $topItem->total_quantity : 0,
-                ];
-            });
+        // Inventory Value
+        $inventoryValue = Sku::sum(DB::raw('quantity * price'));
 
         return Inertia::render('Home', [
-            'totalItems' => $totalItems,
-            'totalStockValue' => $totalStockValue,
-            'lowStockItems' => $lowStockItems,
-            'transactionsToday' => $transactionsToday,
-            'transactionsThisMonth' => $transactionsThisMonth,
-            'recentTransactions' => $recentTransactions,
-            'topItems' => $topItems,
-            'monthlyTransactions' => $monthlyTransactions,
-            'stockAlerts' => $stockAlerts,
-            'topDivisions' => $topDivisions,
+            'statistics' => [
+                'total_items' => $totalItems,
+                'total_skus' => $totalSkus,
+                'low_stock_count' => $lowStockSkus,
+                'total_recipients' => $totalRecipients,
+                'inbound_count' => $inboundCount,
+                'outbound_count' => $outboundCount,
+                'inbound_value' => $inboundValue,
+                'outbound_value' => $outboundValue,
+                'inventory_value' => $inventoryValue,
+            ],
+            'recent_transactions' => $recentTransactions,
+            'low_stock_items' => $lowStockItems,
+            'top_items' => $topItems,
+            'monthly_trend' => $monthlyTrend,
+            'top_recipients' => $topRecipients,
+            'date_range' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
         ]);
     }
 }

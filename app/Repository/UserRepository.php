@@ -7,6 +7,7 @@ use App\Dto\User\UserEditRequest;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class UserRepository
 {
@@ -70,7 +71,7 @@ class UserRepository
         }
         if (!empty($user->profilePhotoPath)) {
             if ($target->profile_photo_path) {
-                Storage::disk('public')->delete($target->profile_photo_path);
+                Storage::disk('public')->delete(Str::after($target->profile_photo_path, "/storage"));
             }
             $target->profile_photo_path = $user->profilePhotoPath;
         }
