@@ -253,7 +253,7 @@ function exportToXlsx() {
         <v-list class="pt-0!">
             <v-list-item>
                 <v-row align="center">
-                    <v-col class="pt-0">
+                    <v-col class="pt-2">
                         <PageTitleHighlightPart first-part-title="Riwayat" second-part-title="Transaksi" />
                     </v-col>
                     <v-col cols="auto">

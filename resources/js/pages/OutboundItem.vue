@@ -7,6 +7,7 @@ import AlertDialog from '@/components/organisms/AlertDialog.vue';
 import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
 import { formatDateIndonesia } from '@/lib/formatters';
 import axios from 'axios';
+import { useDisplay } from 'vuetify/lib/composables/display';
 
 defineOptions({
   layout: ApplicationLayout,
@@ -26,7 +27,7 @@ const skuSelectionItems = props.items.reduce((accumulator, item) => {
   return accumulator;
 }, []);
 
-
+const { xs } = useDisplay();
 const successDialog = ref(false);
 const errorDialog = ref(false);
 const errorMessage = ref('');
@@ -56,7 +57,7 @@ const form = useForm({
     {
       item_id: null,
       unit_id: null,
-      quantity: 0,
+      quantity: 1,
       supportedUnits: []
     },
   ],
@@ -118,7 +119,6 @@ function submitTransaction() {
 
 function cancel() {
   form.reset();
-  window.history.back();
 }
 
 const recipientItems = computed(() => {
@@ -202,9 +202,11 @@ watch(() => form.transaction_items, async (items) => {
           <v-divider class="my-6"></v-divider>
 
           <!-- Transaction Items -->
-          <v-row v-for="(item, index) in form.transaction_items" :key="index" class="items-start!">
-            <v-col class="py-0!">
-              <v-autocomplete v-model="item.sku_id" density="comfortable" :items="skuSelectionItems" label="SKU"
+          <v-row v-for="(item, index) in form.transaction_items" :key="index" class="items-start! odd:bg-gray-100 pt-5">
+            <v-col class="py-0!" cols="11" md="">
+              <v-autocomplete v-model="item.sku_id" density="comfortable" 
+              
+              :items="skuSelectionItems" label="SKU"
                 @update:model-value="() => {
                   // Reset supportedUnits agar watcher bisa fetch ulang
                   item.supportedUnits = [];
@@ -212,17 +214,23 @@ watch(() => form.transaction_items, async (items) => {
                 }" :error-messages="form.errors[`transaction_items.${index}.sku_id`]">
               </v-autocomplete>
             </v-col>
-            <v-col class="py-0!" cols="2">
+            <v-col v-if="xs" cols="1" class="ps-0 mt-1">
+              <v-btn variant="text" size="25" rounded="full" color="red" icon
+                :disabled="form.transaction_items.length === 1" @click="deleteItem(index)">
+                <v-icon icon="mdi-minus" size="18"></v-icon>
+              </v-btn>
+            </v-col>
+            <v-col class="py-0!" cols="6" md="2">
               <v-autocomplete v-model="item.unit_id" density="comfortable" :items="item.supportedUnits"
                 item-title="name" item-value="id" label="Satuan"
                 :disabled="!item.sku_id || item.supportedUnits.length === 0"
                 :error-messages="form.errors[`transaction_items.${index}.unit_id`]" />
             </v-col>
-            <v-col class="py-0!" cols="2">
+            <v-col class="py-0!" cols="6" md="2">
               <v-number-input v-model="item.quantity" :min="1" control-variant="split" density="comfortable"
                 label="Jumlah" :error-messages="form.errors[`transaction_items.${index}.quantity`]" />
             </v-col>
-            <v-col cols="auto" class="mt-1 py-0!">
+            <v-col v-if="!xs" cols="auto" class="mt-1 py-0!">
               <v-btn variant="tonal" color="red" icon size="small" :disabled="form.transaction_items.length === 1"
                 @click="deleteItem(index)">
                 <v-icon icon="mdi-minus"></v-icon>
@@ -247,7 +255,7 @@ watch(() => form.transaction_items, async (items) => {
               <v-btn type="submit" variant="flat" color="blue-accent-3" :loading="form.processing"
                 :disabled="form.processing">
                 <v-icon icon="mdi-content-save" start></v-icon>
-                Simpan Transaksi
+                Submit
               </v-btn>
             </v-col>
           </v-row>

@@ -7,6 +7,7 @@ import SuccessDialog from '@/components/organisms/SuccessDialog.vue';
 import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
 import DateTimePickerInput from '@/components/molecules/DateTimePickerInput.vue';
 import axios from "axios";
+import { useDisplay } from 'vuetify/lib/composables/display';
 
 defineOptions({
   layout: ApplicationLayout,
@@ -22,6 +23,7 @@ const { items } = defineProps({
   },
 });
 
+const { xs } = useDisplay();
 const successDialog = ref(false);
 const errorDialog = ref(false);
 const errorMessage = ref('');
@@ -165,8 +167,9 @@ function cancel() {
           <v-divider class="my-6"></v-divider>
 
           <!-- Transaction Items -->
-          <v-row v-for="(item, index) in form.transaction_items" :key="index" class="items-start!">
-            <v-col class="py-0!">
+          <v-row v-for="(item, index) in form.transaction_items" :key="index"
+            class="items-start! odd:bg-gray-100! pt-5">
+            <v-col class="py-0" cols="11" md="">
               <v-autocomplete v-model="item.sku_id" density="comfortable" :items="skuSelectionItems" label="SKU"
                 @update:model-value="() => {
                   // Reset supportedUnits agar watcher bisa fetch ulang
@@ -175,17 +178,23 @@ function cancel() {
                 }" :error-messages="form.errors[`transaction_items.${index}.sku_id`]">
               </v-autocomplete>
             </v-col>
-            <v-col class="py-0!" cols="2">
+            <v-col v-if="xs" cols="1" class="ps-0 mt-1">
+              <v-btn variant="text" size="25" rounded="full" color="red" icon
+                :disabled="form.transaction_items.length === 1" @click="deleteItem(index)">
+                <v-icon icon="mdi-minus" size="18"></v-icon>
+              </v-btn>
+            </v-col>
+            <v-col class="py-0!" cols="6" lg="2">
               <v-autocomplete v-model="item.unit_id" density="comfortable" :items="item.supportedUnits"
                 item-title="name" item-value="id" label="Satuan"
                 :disabled="!item.sku_id || item.supportedUnits.length === 0"
                 :error-messages="form.errors[`transaction_items.${index}.unit_id`]" />
             </v-col>
-            <v-col class="py-0!" cols="2">
+            <v-col class="py-0!" cols="6" lg="2">
               <v-number-input v-model="item.quantity" :min="1" control-variant="split" density="comfortable"
                 label="Jumlah" :error-messages="form.errors[`transaction_items.${index}.quantity`]" />
             </v-col>
-            <v-col cols="auto" class="mt-1 py-0!">
+            <v-col cols="auto" class="mt-1 py-0!" v-if="!xs">
               <v-btn variant="tonal" color="red" icon size="small" :disabled="form.transaction_items.length === 1"
                 @click="deleteItem(index)">
                 <v-icon icon="mdi-minus"></v-icon>
@@ -193,7 +202,7 @@ function cancel() {
             </v-col>
           </v-row>
 
-          <v-row class="mt-2">
+          <v-row class="mt-7 md:mt-2">
             <v-col class="flex items-center! justify-end! pt-0">
               <v-btn variant="tonal" color="blue-accent-2" :disabled="form.processing" @click="addItem">
                 <v-icon icon="mdi-plus" start></v-icon>
@@ -202,17 +211,16 @@ function cancel() {
             </v-col>
           </v-row>
 
-          <v-divider class="my-6"></v-divider>
+          <v-divider class="my-4 md:my-6"></v-divider>
 
           <v-row>
             <v-col class="flex justify-end gap-4">
-              <v-btn variant="outlined" color="grey" :disabled="form.processing" @click="cancel">
+              <v-btn variant="tonal" color="grey" :disabled="form.processing" @click="cancel">
                 Batal
               </v-btn>
-              <v-btn type="submit" variant="flat" color="blue-accent-3" :loading="form.processing"
-                :disabled="form.processing">
+              <v-btn type="submit" variant="tonal" color="blue" :loading="form.processing" :disabled="form.processing">
                 <v-icon icon="mdi-content-save" start></v-icon>
-                Simpan Transaksi
+                Submit
               </v-btn>
             </v-col>
           </v-row>
