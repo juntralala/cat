@@ -159,7 +159,7 @@ function deleteSku(skuId) {
   <Head title="Unit Penyimpanan Stok"></Head>
   <v-container>
     <v-row>
-      <v-col>
+      <v-col cols="12" md="6">
         <PageTitleHighlightPart first-part-title="Unit" second-part-title="Penyimpanan Stok" />
       </v-col>
     </v-row>
@@ -220,6 +220,9 @@ function deleteSku(skuId) {
             </v-form>
           </v-card>
         </v-dialog>
+      </v-col>
+      <v-col class="md:flex md:justify-end">
+        <v-btn :href="route('items.skus.export.xlsx')" variant="plain" color="gray" prepend-icon="mdi-download">SpreadSheet</v-btn>
       </v-col>
     </v-row>
     <v-row>

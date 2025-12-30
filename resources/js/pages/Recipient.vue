@@ -42,8 +42,8 @@ const recipientAddFormRule = {
   ],
   nickname: [
     // requiredRule,
-    (value) => (value?.trim() && value?.length >= 2) ? "Nama panggilan harus setidaknya 2 karakter" : true,
-    (value) => (value?.trim() && value?.length < 255) ? "Nama panggilan tidak boleh lebih 255 karakter" : true,
+    (value) => (value?.trim() && value?.length >= 2) || "Nama panggilan harus setidaknya 2 karakter",
+    (value) => (value?.trim() && value?.length < 255) || "Nama panggilan tidak boleh lebih 255 karakter",
   ],
   division: [
     // 
@@ -58,8 +58,8 @@ const recipientEditFormRule = {
   ],
   nickname: [
     // requiredRule,
-    (value) => (!!value?.length && value?.length >= 2) ? "Nama panggilan harus setidaknya 2 karakter" : true,
-    (value) => (!!value?.length && value?.length < 255) ? "Nama panggilan tidak boleh lebih 255 karakter" : true,
+    (value) => (!!value?.length && value?.length >= 2) || "Nama panggilan harus setidaknya 2 karakter",
+    (value) => (!!value?.length && value?.length < 255) || "Nama panggilan tidak boleh lebih 255 karakter",
   ],
   division: [
     // nggak ada validasi

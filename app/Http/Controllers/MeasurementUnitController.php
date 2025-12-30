@@ -59,7 +59,6 @@ class MeasurementUnitController extends Controller
 
     // belum ada route
     public function restore($id) {
-
         $unit = MeasurementUnit::findOrFail($id);
         $unit->restore();
         return redirect()->back();

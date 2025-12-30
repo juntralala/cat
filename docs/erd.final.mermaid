@@ -45,7 +45,7 @@ erDiagram
     measurement_units {
         id VARCHAR(100) PK
         name VARCHAR(255) UK
-        base_measurement_unit_id VARCHAR(100) FK "nullable"
+        base_measurement_unit_id VARCHAR(100) FK
         conversion INTEGER "nullable"
         is_base boolean
         created_at DATETIME
@@ -81,8 +81,9 @@ erDiagram
         id VARCHAR(100) PK
         transaction_id VARCHAR(100) FK
         item_sku_id VARCHAR(100) FK "Track specific SKU"
-        unit_id VARCHAR(100) FK "Satuan transaksi"
+        unit_id VARCHAR(100) FK "Satuan transaksi, bisa pakai satuan terkecil bisa tidak"
         quantity INTEGER "Jumlah dalam satuan unit_id"
+        base_quantity INTEGER "Jumlah dalam satuan terkecil"
         price DECIMAL(22_4) "Harga modal per unit saat transaksi"
         created_at DATETIME
         updated_at DATETIME
@@ -91,7 +92,7 @@ erDiagram
 
     items {
         id VARCHAR(100) PK
-        name VARCHAR(100)
+        name VARCHAR(100) UK
         %% description text
         base_measurement_unit_id VARCHAR(100) FK
         created_at DATETIME
@@ -113,8 +114,8 @@ erDiagram
 
     sku_measurement_unit_conversions {
         id VARCHAR(100)
-        measurement_unit_id VARCHAR(100) FK
-        item_sku_id VARCHAR(100) FK
+        measurement_unit_id VARCHAR(100) FK, UK
+        item_sku_id VARCHAR(100) FK, UK
         conversion INTEGER
         created_at DATETIME
         updated_at DATETIME

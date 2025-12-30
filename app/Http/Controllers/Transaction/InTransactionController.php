@@ -8,6 +8,7 @@ use App\Models\MeasurementUnit;
 use App\Models\Sku;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
+use App\Service\MeasurementUnitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,9 @@ use Inertia\Inertia;
 
 class InTransactionController extends Controller
 {
+    public function __construct(
+        private MeasurementUnitService $measurementUnitService
+    ){}
 
     public function index()
     {
@@ -50,24 +54,17 @@ class InTransactionController extends Controller
 
             foreach ($validated['transaction_items'] as $item) {
                 $sku = Sku::findOrFail($item['sku_id']);
-                $transactionItem = TransactionItem::create([
+                $conversion = $this->measurementUnitService->getConversion($item['unit_id'], $sku->id);
+                $baseQuantity = $item['quantity'] * $conversion;
+                $sku->increment('quantity',  $baseQuantity);
+                TransactionItem::create([
                     'transaction_id' => $transaction->id,
                     'sku_id' => $item['sku_id'],
                     'measurement_unit_id' => $item['unit_id'],
-                    'quantity' => $item['quantity'],
                     'price' => $sku->price,
+                    'quantity' => $item['quantity'],
+                    'base_quantity' => $baseQuantity,
                 ]);
-                $unit = $transactionItem->unit;
-                if($unit->is_base) {
-                    $sku->increment('quantity', $item['quantity']);
-                } else if ($unit->baseMeasurementUnit()->withTrashed()->exists()) {
-                    $sku->increment('quantity', $item['quantity'] * ($unit->conversion ?? 1));
-                } else if($skuMeasurementUnitConversion = $unit->skuMeasurementUnitConversions()->where('sku_id',$item['sku_id'])->first(['conversion'])) {
-                    $conversion = $skuMeasurementUnitConversion->conversion ?? 1;
-                    $sku->increment('quantity', $conversion * $item['quantity']);
-                } else {
-                    abort(400, "Ukuran satuan bukan satuan dasar dan tidak memiliki konversi yang terdaftar");
-                }
             }
 
             DB::commit();

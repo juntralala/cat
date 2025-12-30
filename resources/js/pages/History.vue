@@ -263,7 +263,7 @@ function exportToXlsx() {
                                     :disabled="!transactions.data || transactions.data.length === 0"
                                     @click="exportToXlsx">
                                     <v-icon icon="mdi-download" start></v-icon>
-                                    Unduh SpreadSheet
+                                    SpreadSheet
                                 </v-btn>
                             </template>
                             <span>Unduh data berdasarkan filter yang aktif saat ini</span>

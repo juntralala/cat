@@ -13,14 +13,18 @@ return new class extends Migration
             $table->string('transaction_id', 100);
             $table->string('sku_id', 100);
             $table->string('measurement_unit_id', 100);
+            // $table->string('base_measurement_unit_id', 100);
             $table->integer('quantity');
+            $table->integer('base_quantity');
             $table->decimal('price', 22, 4);
+            // $table->decimal('subtotal', 22, 4);
             $table->timestamps();
             $table->softDeletes();
 
             $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
             $table->foreign('sku_id')->references('id')->on('skus')->onDelete('cascade');
             $table->foreign('measurement_unit_id')->references('id')->on('measurement_units');
+            // $table->foreign('base_measurement_unit_id')->references('id')->on('measurement_units');
         });
     }
 

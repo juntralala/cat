@@ -5,9 +5,9 @@ import { useForm } from '@inertiajs/vue3';
 import SuccessDialog from '@/components/organisms/SuccessDialog.vue';
 import AlertDialog from '@/components/organisms/AlertDialog.vue';
 import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
-import { formatDateIndonesia } from '@/lib/formatters';
 import axios from 'axios';
 import { useDisplay } from 'vuetify/lib/composables/display';
+import DateTimePickerInput from '@/components/molecules/DateTimePickerInput.vue';
 
 defineOptions({
   layout: ApplicationLayout,
@@ -40,7 +40,7 @@ function onRecipientChange(recipient) {
     return;
   }
   if (recipient instanceof String || typeof recipient === 'string') {
-    console.log('recive recipient string: ' + recipient + a);
+    console.log('recive recipient string: ' + recipient);
     return;
   }
   if (recipient.division) {
@@ -63,8 +63,6 @@ const form = useForm({
   ],
 });
 
-const formattedDate = computed(() => formatDateIndonesia(form.transaction_date));
-
 function addItem() {
   form.transaction_items.push({
     item_id: null,
@@ -82,11 +80,10 @@ function deleteItem(index) {
 function submitTransaction() {
   form
     .transform((data) => {
-      // Ubah format tanggal ke YYYY-MM-DD sebelum dikirim
       if (data.transaction_date instanceof Date) {
         data.transaction_date = data.transaction_date.toISOString();
       }
-      if(!(data.recipient_id instanceof String)) {
+      if (!(data.recipient_id instanceof String)) {
         data.recipient_id = data.recipient_id.id
       }
       data.transaction_items = data.transaction_items.map(item => {
@@ -180,15 +177,8 @@ watch(() => form.transaction_items, async (items) => {
                 :error-messages="form.errors.division" persistent-hint />
             </v-col>
             <v-col cols="12" md="4">
-              <v-menu v-model="menuDate" :close-on-content-click="false" transition="scale-transition" min-width="auto">
-                <template v-slot:activator="{ props: menuProps }">
-                  <v-text-field v-model="formattedDate" density="comfortable" label="Tanggal Transaksi" readonly
-                    v-bind="menuProps" prepend-inner-icon="mdi-calendar"
-                    :error-messages="form.errors.transaction_date" />
-                </template>
-                <v-date-picker v-model="form.transaction_date" @update:model-value="menuDate = false"
-                  header="Pilih Tanggal" hide-header :max="new Date()" />
-              </v-menu>
+              <DateTimePickerInput label="Tanggal Transaksi" v-model="menuDate" density="comfortable"
+                :error-messages="form.errors.transaction_date" />
             </v-col>
           </v-row>
 
@@ -204,9 +194,7 @@ watch(() => form.transaction_items, async (items) => {
           <!-- Transaction Items -->
           <v-row v-for="(item, index) in form.transaction_items" :key="index" class="items-start! odd:bg-gray-100 pt-5">
             <v-col class="py-0!" cols="11" md="">
-              <v-autocomplete v-model="item.sku_id" density="comfortable" 
-              
-              :items="skuSelectionItems" label="SKU"
+              <v-autocomplete v-model="item.sku_id" density="comfortable" :items="skuSelectionItems" label="SKU"
                 @update:model-value="() => {
                   // Reset supportedUnits agar watcher bisa fetch ulang
                   item.supportedUnits = [];
@@ -238,7 +226,7 @@ watch(() => form.transaction_items, async (items) => {
             </v-col>
           </v-row>
 
-          <v-row class="mt-2">
+          <v-row class="mt-7 md:mt-2">
             <v-col class="flex items-center! justify-end! pt-0">
               <v-btn @click="addItem" variant="tonal" color="blue-accent-2" :disabled="form.processing">
                 <v-icon icon="mdi-plus" start></v-icon>
@@ -247,12 +235,12 @@ watch(() => form.transaction_items, async (items) => {
             </v-col>
           </v-row>
 
-          <v-divider class="my-6"></v-divider>
+          <v-divider class="my-4 md:my-6"></v-divider>
 
           <v-row>
             <v-col class="flex justify-end gap-4">
-              <v-btn @click="cancel" variant="outlined" color="grey" :disabled="form.processing"> Batal </v-btn>
-              <v-btn type="submit" variant="flat" color="blue-accent-3" :loading="form.processing"
+              <v-btn @click="cancel" variant="tonal" color="grey" :disabled="form.processing"> Batal </v-btn>
+              <v-btn type="submit" variant="tonal" color="blue-accent-3" :loading="form.processing"
                 :disabled="form.processing">
                 <v-icon icon="mdi-content-save" start></v-icon>
                 Submit

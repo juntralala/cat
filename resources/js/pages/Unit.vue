@@ -209,7 +209,6 @@ const closeErrorDialog = () => {
                 <v-card-title>
                     <span class="text-h5">{{ editingId ? 'Edit Unit Ukuran' : 'Tambah Unit Ukuran Baru' }}</span>
                 </v-card-title>
-                {{ form.errors }}
                 <v-card-text>
                     <v-container>
                         <v-form @submit.prevent="submitForm">

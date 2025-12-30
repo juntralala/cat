@@ -47,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/items/skus', [SkuController::class, 'create'])->name('items.skus.create');
     Route::put('/items/skus/{id}', [SkuController::class, 'update'])->name('items.skus.update');
     Route::delete('/items/skus/{id}', [SkuController::class, 'delete'])->name('items.skus.delete');
+    Route::get('/items/skus/export/xlsx', [SkuController::class, 'toXlsx'])->name('items.skus.export.xlsx');
     Route::get('/items/skus/units/{skuId}', [MeasurementUnitController::class, 'getSupportedMueasurementUnitsBySkuId'])->name('items.skus.units.by-sku-id');
     Route::get('/items/stocks', [StockController::class, 'index'])->name('items.stocks');
     Route::post('/items/stocks', [StockController::class, 'store']);
@@ -77,3 +78,6 @@ Route::get('/get-session', function (Request $request) {
 });
 
 Route::inertia("/counter", "Counter");
+
+    Route::get('/expenditures/skus', [DashboardController::class, 'getExpendituresPerSKU'])->name('expenditures.skus');
+    Route::get('/expenditures/skus/export/xlsx', [DashboardController::class, 'toXlsx'])->name('expenditures.skus.export.xlsx');

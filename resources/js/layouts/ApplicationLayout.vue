@@ -138,7 +138,7 @@ v-if="page.props.auth?.user?.profile_photo_path"
                 <v-list-item value="items.skus">
                     <div class="flex items-baseline gap-1">
                         <v-icon icon="mdi-cube" />
-                        <div>Unit Penyimpanan Barang</div>
+                        <div>SKU</div>
                     </div>
                 </v-list-item>
                 </Link>

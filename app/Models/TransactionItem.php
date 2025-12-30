@@ -30,6 +30,7 @@ class TransactionItem extends Model
         'measurement_unit_id',
         'price',
         'quantity',
+        'base_quantity',
     ];
 
     protected $casts = [

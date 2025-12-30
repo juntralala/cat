@@ -7,6 +7,8 @@ use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Inertia\Inertia;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -33,7 +35,7 @@ class TransactionHistoryController extends Controller
                         $q->where('name', 'like', "%{$search}%")
                             ->orWhere('division', 'like', "%{$search}%");
                     })
-                    ->orWhereHas('transactionItems.sku.item', function($q) use ($search) {
+                    ->orWhereHas('transactionItems.sku.item', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%");
                     });
             });
@@ -62,50 +64,46 @@ class TransactionHistoryController extends Controller
     {
         $transactions = $this->getTransactionQueryBuilderByRequest($request)
             ->get();
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
 
-        // header
-        $sheet->fromArray(source: [
-            'No',
-            'Tipe',
-            'Tanggal Transaksi',
-            'Penerima/Pemasok',
-            'Divisi',
-            'Barang',
-            'SKU',
-            'Satuan',
-            'Jumlah',
-            'Catatan',
-        ], nullValue: null, startCell: 'A1');
+        $callback = function () use ($transactions) {
+            try {
+                $writer = new Writer();
+                $writer->openToFile("php://output");
+                $writer->addRow(Row::fromValues([
+                    'No',
+                    'Tipe',
+                    'Tanggal Transaksi',
+                    'Penerima/Pemasok',
+                    'Divisi',
+                    'Barang',
+                    'SKU',
+                    'Satuan',
+                    'Jumlah',
+                    'Catatan',
+                ]));
 
-        // data
-        $no = 0;
-        foreach ($transactions as $index => $transaction) {
-            foreach ($transaction->transactionItems as $transactionItem) {
-                $sheet->fromArray(source: [
-                    ++$no,
-                    match($transaction->type) {
-                        'in' => "Masuk",
-                        'out' => "Keluar",
-                        '' => "Kosong",
-                        default => "Invalid Data"
-                    },
-                    $transaction->transaction_date->format('Y-m-d'),
-                    $transaction->recipient?->name ?? $transaction->supplier,
-                    $transaction->recipient?->division ?? $transaction->division,
-                    $transactionItem->sku->item->name,
-                    $transactionItem->sku->sku,
-                    $transactionItem->unit->name,
-                    $transactionItem->quantity,
-                    $transaction->notes,
-                ], nullValue: null, startCell: 'A' . (2 + $index)); // mulai dari baris ke-2
+                $no = 0;
+                foreach ($transactions as $index => $transaction) {
+                    foreach ($transaction->transactionItems as $transactionItem) {
+                        $writer->addRow(Row::fromValues([
+                            ++$no,
+                            __("common.transactions.$transaction->type"),
+                            $transaction->transaction_date->format('Y-m-d'),
+                            $transaction->recipient?->name ?? $transaction->supplier,
+                            $transaction->recipient?->division ?? $transaction->division,
+                            $transactionItem->sku->item->name,
+                            $transactionItem->sku->sku,
+                            $transactionItem->unit->name,
+                            $transactionItem->quantity,
+                            $transaction->notes,
+                        ]));
+                    }
+                }
+            } finally {
+                $writer->close();
             }
-        }
-        $writer = new Xlsx($spreadsheet);
+        };
 
-        return response()->streamDownload(function () use ($writer) {
-            $writer->save('php://output');
-        }, 'history_trangsaksi_' . Date::now()->format('d_m_Y_i_s') . '.xlsx');
+        return response()->streamDownload($callback, 'history_trangsaksi_' . Date::now()->format('d_m_Y_i_s') . '.xlsx');
     }
 }

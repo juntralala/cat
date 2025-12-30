@@ -7,31 +7,35 @@ use App\Models\Sku;
 use App\Models\Transaction;
 use App\Models\TransactionItem;
 use App\Models\Recipient;
+use App\Service\DashboardService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private DashboardService $service
+    ) {
+    }
+
     public function index(Request $request)
     {
-        // Get date range for filtering (default: last 30 days)
         $startDate = $request->input('start_date', now()->subDays(30)->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->format('Y-m-d'));
-
-        // Summary Statistics
         $totalItems = Item::count();
         $totalSkus = Sku::count();
         $lowStockSkus = Sku::where('quantity', '<=', 10)->count();
         $totalRecipients = Recipient::count();
-
-        // Transaction Summary (last 30 days)
         $transactionSummary = Transaction::whereBetween('transaction_date', [$startDate, $endDate])
             ->selectRaw('
                 type,
                 COUNT(*) as total_transactions,
                 SUM(
-                    (SELECT SUM(ti.quantity * IF(ti.price, ti.price, 1))
+                    (SELECT SUM(ti.base_quantity * IF(ti.price, ti.price, 1))
                      FROM transaction_items ti
                      WHERE ti.transaction_id = transactions.id)
                 ) as total_value
@@ -45,9 +49,8 @@ class DashboardController extends Controller
         $inboundValue = $transactionSummary->get('in')?->total_value ?? 0;
         $outboundValue = $transactionSummary->get('out')?->total_value ?? 0;
 
-        // Recent Transactions (last 10)
         $recentTransactions = Transaction::with(['user:id,name', 'recipient:id,name'])
-            ->withSum('transactionItems as total_value', DB::raw('quantity * price'))
+            ->withSum('transactionItems as total_value', DB::raw('base_quantity * price'))
             ->latest('transaction_date')
             ->take(10)
             ->get()
@@ -58,12 +61,11 @@ class DashboardController extends Controller
                     'transaction_date' => $transaction->transaction_date,
                     'recipient' => $transaction->recipient?->name,
                     'supplier' => $transaction->supplier,
-                    'total_value' => $transaction->total_value ?? 0,
+                    'total_value' => (int) (($transaction->type == 'in') ? +$transaction->total_value : -$transaction->total_value),
                     'created_by' => $transaction->user?->name,
                 ];
             });
 
-        // Low Stock Items
         $lowStockItems = Sku::with(['item:id,name', 'item.baseMeasurementUnit:id,name'])
             ->where('quantity', '<=', 10)
             ->orderBy('quantity', 'asc')
@@ -80,7 +82,6 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Top Items by Transaction Volume (last 30 days)
         $topItems = TransactionItem::join('skus', 'transaction_items.sku_id', '=', 'skus.id')
             ->join('items', 'skus.item_id', '=', 'items.id')
             ->join('transactions', 'transaction_items.transaction_id', '=', 'transactions.id')
@@ -96,7 +97,6 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Monthly Transaction Trend (last 6 months)
         $monthlyTrend = Transaction::whereBetween('transaction_date', [now()->subMonths(6), now()])
             ->selectRaw('
                 DATE_FORMAT(transaction_date, "%Y-%m") as month,
@@ -114,7 +114,6 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Top Recipients by Transaction Count
         $topRecipients = Transaction::join('recipients', 'transactions.recipient_id', '=', 'recipients.id')
             ->whereBetween('transaction_date', [$startDate, $endDate])
             ->where('type', 'out')
@@ -128,7 +127,6 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        // Inventory Value
         $inventoryValue = Sku::sum(DB::raw('quantity * price'));
 
         return Inertia::render('Home', [
@@ -153,5 +151,47 @@ class DashboardController extends Controller
                 'end_date' => $endDate,
             ],
         ]);
+    }
+
+    public function getExpendituresPerSKU(Request $request)
+    {
+        $start = $request->date('start');
+        $end = $request->date('end');
+        $page = $request->input('page', 1);
+        $search = $request->input('search');
+        return response()->json(
+            $this->service->getExpendituresPerSKU($search, $start, $end, $page)
+        );
+    }
+
+    public function toXlsx(Request $request)
+    {
+        $start = $request->date('start');
+        $end = $request->date('end');
+        $service = $this->service;
+        $callback = function () use ($service, $start, $end) {
+            try {
+                $writer = new Writer();
+                $writer->openToFile('php://output');
+                $writer->addRow(Row::fromValues(['Nama Barang', 'SKU', 'Nama Spesifikasi', 'Jumlah', 'Satuan', 'Harga/Satuan', 'Total Pengeluaran']));
+                $service->exportXlsx(function ($skus) use ($writer) {
+                    foreach ($skus as $sku) {
+                        $writer->addRow(Row::fromValues([
+                            $sku->item->name,
+                            $sku->sku,
+                            $sku->specification_name,
+                            $sku->total_quantity,
+                            $sku->item->baseMeasurementUnit->name,
+                            (float) $sku->out_price,
+                            (float) $sku->expenditure,
+                        ]));
+                    }
+                }, $start, $end);
+            } finally {
+                $writer->close();
+            }
+        };
+
+        return response()->streamDownload($callback, 'pengeluaran_' . (Date::now("+8")->format('d-m-Y')) . '.xlsx');
     }
 }

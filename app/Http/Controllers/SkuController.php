@@ -7,8 +7,11 @@ use App\Models\Item;
 use App\Models\Sku;
 use App\Models\MeasurementUnit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
 class SkuController extends Controller
 {
@@ -79,5 +82,36 @@ class SkuController extends Controller
             $sku->skuMeasurementUnitConversions()->delete();
             $sku->delete();
         });
+    }
+
+    public function toXlsx(Request $request) {
+        $callback = function() {
+            try {
+                $writer = new Writer();
+                $writer->openToFile('php://output');
+                $writer->addRow(Row::fromValues([
+                    "No", "Nama", "SKU", "Nama Spesifikasi", "Stok", "Satuan Terkecil", "Harga Satuan Terkecil",
+                ]));
+    
+                $no = 0;
+                Sku::with('item.baseMeasurementUnit:id,name')->chunk(100, function($skus)use ($writer, &$no) {
+                    foreach($skus as $sku) {
+                        $writer->addRow(Row::fromValues([
+                            ++$no,
+                            $sku->item->name,
+                            $sku->sku,
+                            $sku->spesification_name,
+                            $sku->quantity,
+                            $sku->item->baseMeasurementUnit->name,
+                            $sku->price
+                        ]));
+                    }
+                });
+            } finally {
+                $writer->close();
+            }
+        };
+
+        return response()->streamDownload($callback, "sku_" . (Date::now("+8")->format("d-m-Y")) . ".xlsx");
     }
 }

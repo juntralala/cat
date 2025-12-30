@@ -153,7 +153,7 @@ function cancel() {
                 :error-messages="form.errors.supplier" />
             </v-col>
             <v-col cols="12" md="6">
-              <DateTimePickerInput v-model="form.transaction_date" :error-messages="form.errors.transaction_date" />
+              <DateTimePickerInput label="Tanggal Transaksi" v-model="form.transaction_date" density="comfortable" :error-messages="form.errors.transaction_date" />
             </v-col>
           </v-row>
 
@@ -215,9 +215,7 @@ function cancel() {
 
           <v-row>
             <v-col class="flex justify-end gap-4">
-              <v-btn variant="tonal" color="grey" :disabled="form.processing" @click="cancel">
-                Batal
-              </v-btn>
+              <v-btn variant="tonal" color="grey" :disabled="form.processing" @click="cancel">Batal</v-btn>
               <v-btn type="submit" variant="tonal" color="blue" :loading="form.processing" :disabled="form.processing">
                 <v-icon icon="mdi-content-save" start></v-icon>
                 Submit
