@@ -48,7 +48,7 @@ class MeasurementUnitController extends Controller
         $unit = MeasurementUnit::findOrFail($id);
         $transaction = $unit->transactionItems()->withTrashed()->exists();
         $item = $unit->basedMeasurementUnitItems()->withTrashed()->exists();
-        $skuUnitConversion = $unit->skuMeasurementUnitConversions()->withTrashed()->exists();
+        $skuUnitConversion = $unit->skuMeasurementUnitConversions()->exists();
         if(!($transaction && $item && $skuUnitConversion)) {
             $unit->forceDelete();
         } else {

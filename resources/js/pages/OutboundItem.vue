@@ -31,7 +31,6 @@ const { xs } = useDisplay();
 const successDialog = ref(false);
 const errorDialog = ref(false);
 const errorMessage = ref('');
-const menuDate = ref(false);
 
 // Watch perubahan recipient_id untuk auto-fill division
 function onRecipientChange(recipient) {
@@ -177,7 +176,7 @@ watch(() => form.transaction_items, async (items) => {
                 :error-messages="form.errors.division" persistent-hint />
             </v-col>
             <v-col cols="12" md="4">
-              <DateTimePickerInput label="Tanggal Transaksi" v-model="menuDate" density="comfortable"
+              <DateTimePickerInput label="Tanggal Transaksi" v-model="form.transaction_date" density="comfortable"
                 :error-messages="form.errors.transaction_date" />
             </v-col>
           </v-row>

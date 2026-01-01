@@ -25,6 +25,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/users/{id}', [UserController::class, 'editUser']);
         Route::delete('/users/{id}', [UserController::class, 'deleteUser']);
     });
+    Route::get('/expenditures/skus', [DashboardController::class, 'getExpendituresPerSKU'])->name('expenditures.skus');
+    Route::get('/expenditures/skus/export/xlsx', [DashboardController::class, 'toXlsx'])->name('expenditures.skus.export.xlsx');
     Route::get('/recipients', [RecipientController::class, 'page'])->name('recipients');
     Route::post('/recipients', [RecipientController::class, 'store']);
     Route::put('/recipients/{id}', [RecipientController::class, 'update']);
@@ -78,6 +80,3 @@ Route::get('/get-session', function (Request $request) {
 });
 
 Route::inertia("/counter", "Counter");
-
-    Route::get('/expenditures/skus', [DashboardController::class, 'getExpendituresPerSKU'])->name('expenditures.skus');
-    Route::get('/expenditures/skus/export/xlsx', [DashboardController::class, 'toXlsx'])->name('expenditures.skus.export.xlsx');

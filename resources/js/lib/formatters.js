@@ -1,10 +1,23 @@
 export function formatDateIndonesia(date) {
     if (!date) return '';
-    if (typeof date == 'string') return date;
+    if (typeof date == 'string' || date instanceof String) return date;
     const options = {
         year: 'numeric',
         month: 'numeric',
         day: 'numeric',
     };
     return date.toLocaleDateString('id-ID', {options});
+}
+
+export function formatRp(number) {
+    number = parseInt(number);
+    if(number == NaN) {
+        console.error("formatRp: number is NaN");
+        return null;
+    }
+    return number.toLocaleString('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0
+    });
 }

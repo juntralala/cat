@@ -24,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        //
+        if($this->app->hasDebugModeEnabled()) {
+            \Illuminate\Support\Facades\DB::listen(function($q) {
+                \Illuminate\Support\Facades\Log::info($q->sql);
+            });
+        }
     }
 }

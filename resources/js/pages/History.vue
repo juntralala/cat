@@ -186,18 +186,20 @@ function exportToXlsx() {
                         <v-col cols="12" md="6">
                             <div class="mb-4">
                                 <p class="text-caption text-grey-darken-1 mb-1">
+                                    {{ "Petugas" }}
+                                </p>
+                                <p class="text-body-1 font-weight-medium">
+                                    {{ selectedTransaction.user.name }}
+                                </p>
+                            </div>
+                        </v-col>
+                        <v-col cols="12" md="6">
+                            <div class="mb-4">
+                                <p class="text-caption text-grey-darken-1 mb-1">
                                     {{ selectedTransaction.type === 'in' ? 'Supplier' : 'Penerima' }}
                                 </p>
                                 <p class="text-body-1 font-weight-medium">
                                     {{ getPartyName(selectedTransaction) }}
-                                </p>
-                            </div>
-                        </v-col>
-                        <v-col v-if="selectedTransaction.type === 'out'" cols="12" md="6">
-                            <div class="mb-4">
-                                <p class="text-caption text-grey-darken-1 mb-1">Divisi</p>
-                                <p class="text-body-1 font-weight-medium">
-                                    {{ selectedTransaction.division || '-' }}
                                 </p>
                             </div>
                         </v-col>

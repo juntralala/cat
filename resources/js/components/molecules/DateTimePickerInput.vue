@@ -17,12 +17,12 @@ defineProps({
   }
 });
 
-const pickedDate = defineModel({ type: String });
+const pickedDate = defineModel({ type: Date });
 const formattedDate = computed(() => formatDateIndonesia(pickedDate.value));
 </script>
 
 <template>
-  <v-text-field v-model="formattedDate" :density :label readonly prepend-inner-icon="mdi-calendar"
+  <v-text-field :model-value="formattedDate" :density :label readonly prepend-inner-icon="mdi-calendar"
     :error-messages="errorMessages">
     <v-menu v-slot="{ isActive }" activator="parent" :close-on-content-click="false" transition="scale-transition"
       min-width="auto">

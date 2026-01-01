@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onBeforeMount } from 'vue';
 import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import DateTimePickerInput from '@/components/molecules/DateTimePickerInput.vue';
 import axios from 'axios';
 import { debounce } from 'lodash';
-import { formatDateIndonesia } from '@/lib/formatters';
+import { formatDateIndonesia, formatRp } from '@/lib/formatters';
 
 defineOptions({
   layout: ApplicationLayout,
@@ -33,17 +33,7 @@ const searchOutbound = ref('');
 const expenditureStartDate = ref(props.date_range.start_date);
 const expenditureEndDate = ref(props.date_range.end_date);
 
-// Format currency
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-  }).format(value);
-};
-
-// Format date
-const formatDate = (date) => formatDateIndonesia(new Date(date));
+const formatDate = formatDateIndonesia;
 
 // Fetch expenditure data from API
 const fetchExpenditureData = async () => {
@@ -51,7 +41,6 @@ const fetchExpenditureData = async () => {
   try {
     const response = await axios.get(route('expenditures.skus'), {
       params: {
-        p: "He",
         start: expenditureStartDate.value,
         end: expenditureEndDate.value,
         page: expenditurePage.value,
@@ -103,36 +92,9 @@ const totalExpenditureValue = computed(() => {
   return expenditureData.value.reduce((sum, item) => sum + item.expenditure, 0);
 });
 
-// Chart data for monthly trend
-const monthlyChartData = computed(() => {
-  const months = Object.keys(props.monthly_trend);
-  return {
-    labels: months.map(m => {
-      const [year, month] = m.split('-');
-      return new Date(year, month - 1).toLocaleDateString('id-ID', { month: 'short', year: 'numeric' });
-    }),
-    datasets: [
-      {
-        label: 'Barang Masuk',
-        data: months.map(m => props.monthly_trend[m].inbound),
-        backgroundColor: '#4CAF50',
-      },
-      {
-        label: 'Barang Keluar',
-        data: months.map(m => props.monthly_trend[m].outbound),
-        backgroundColor: '#2196F3',
-      },
-    ],
-  };
+onBeforeMount(() => {
+  fetchExpenditureData();
 });
-
-// Placeholder for CSV export - to be implemented later
-const exportToCSV = () => {
-  console.log('Export CSV - To be implemented');
-};
-
-// Load data on mount
-fetchExpenditureData();
 </script>
 
 <template>
@@ -189,7 +151,7 @@ fetchExpenditureData();
           <div class="d-flex align-center justify-space-between">
             <div>
               <p class="text-body-2 text-medium-emphasis mb-1">Nilai Inventori</p>
-              <h3 class="text-h5 font-weight-bold">{{ formatCurrency(statistics.inventory_value) }}</h3>
+              <h3 class="text-h5 font-weight-bold">{{ formatRp(statistics.inventory_value) }}</h3>
             </div>
             <v-icon size="48" color="blue-darken-3">mdi-cash-multiple</v-icon>
           </div>
@@ -213,7 +175,7 @@ fetchExpenditureData();
             <v-divider class="my-2" />
             <div class="d-flex justify-space-between align-center">
               <span class="text-body-2 text-medium-emphasis">Total Nilai</span>
-              <span class="text-h6 font-weight-bold text-blue">{{ formatCurrency(statistics.inbound_value) }}</span>
+              <span class="text-h6 font-weight-bold text-blue">{{ formatRp(statistics.inbound_value) }}</span>
             </div>
           </v-card-text>
         </v-card>
@@ -233,7 +195,7 @@ fetchExpenditureData();
             <v-divider class="my-2" />
             <div class="d-flex justify-space-between align-center">
               <span class="text-body-2 text-medium-emphasis">Total Nilai</span>
-              <span class="text-h6 font-weight-bold text-blue">{{ formatCurrency(statistics.outbound_value) }}</span>
+              <span class="text-h6 font-weight-bold text-blue">{{ formatRp(statistics.outbound_value) }}</span>
             </div>
           </v-card-text>
         </v-card>
@@ -274,7 +236,7 @@ fetchExpenditureData();
               </v-col>
               <v-col cols="12" md="2" class="text-right">
                 <div class="text-body-2 text-medium-emphasis">Total Nilai Pengeluaran</div>
-                <div class="text-h6 font-weight-bold text-blue">{{ formatCurrency(totalExpenditureValue) }}</div>
+                <div class="text-h6 font-weight-bold text-blue">{{ formatRp(totalExpenditureValue) }}</div>
               </v-col>
             </v-row>
 
@@ -304,9 +266,9 @@ fetchExpenditureData();
                       {{ item.count }} {{ item.measurementUnit }}
                     </v-chip>
                   </td>
-                  <td class="text-right">{{ formatCurrency(item.pricePerUnit) }}</td>
+                  <td class="text-right">{{ formatRp(item.pricePerUnit) }}</td>
                   <td class="text-right font-weight-bold" :class="item.expenditure > 0 ? 'text-blue' : 'text-grey'">
-                    {{ formatCurrency(item.expenditure) }}
+                    {{ formatRp(item.expenditure) }}
                   </td>
                 </tr>
                 <tr v-if="expenditureData.length === 0 && !expenditureLoading">
@@ -365,7 +327,7 @@ fetchExpenditureData();
                     </v-chip>
                   </td>
                   <td>{{ transaction.recipient || transaction.supplier || '-' }}</td>
-                  <td class="text-right">{{ formatCurrency(transaction.total_value) }}</td>
+                  <td class="text-right">{{ formatRp(transaction.total_value) }}</td>
                 </tr>
                 <tr v-if="recent_transactions.length === 0">
                   <td colspan="4" class="text-center text-medium-emphasis">
@@ -380,7 +342,7 @@ fetchExpenditureData();
 
       <!-- Low Stock Items -->
       <v-col cols="12" md="5">
-        <v-card>
+        <v-card class="h-full">
           <v-card-title class="d-flex align-center">
             <v-icon class="mr-2" color="orange">mdi-alert-circle</v-icon>
             Stok Menipis
@@ -411,7 +373,7 @@ fetchExpenditureData();
 
     <!-- Top Recipients -->
     <v-row class="mt-4 mb-8">
-      <v-col cols="12" md="6">
+      <v-col cols="12">
         <v-card>
           <v-card-title>
             <v-icon class="mr-2">mdi-account-group</v-icon>

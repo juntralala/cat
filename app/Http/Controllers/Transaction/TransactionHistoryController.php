@@ -23,20 +23,21 @@ class TransactionHistoryController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         return Transaction::with([
+            'user:id,name',
             'recipient:id,name,division',
             'transactionItems.sku.item:id,name',
             'transactionItems.unit:id,name'
         ])->when($search, function ($query, $search) {
             $query->where(function ($q) use ($search) {
-                $q->where('supplier', 'like', "%{$search}%")
-                    ->orWhere('division', 'like', "%{$search}%")
-                    ->orWhere('notes', 'like', "%{$search}%")
+                $q->where('supplier', '=', "%{$search}%")
+                    ->orWhere('division', '=', "%{$search}%")
+                    ->orWhere('notes', '=', "%{$search}%")
                     ->orWhereHas('recipient', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%")
-                            ->orWhere('division', 'like', "%{$search}%");
+                        $q->where('name', '=', "%{$search}%")
+                            ->orWhere('division', '=', "%{$search}%");
                     })
                     ->orWhereHas('transactionItems.sku.item', function ($q) use ($search) {
-                        $q->where('name', 'like', "%{$search}%");
+                        $q->where('name', '=', "%{$search}%");
                     });
             });
         })

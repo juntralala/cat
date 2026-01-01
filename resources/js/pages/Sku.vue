@@ -5,6 +5,7 @@ import { ref, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AlertDialog from '@/components/organisms/AlertDialog.vue';
 import PageTitleHighlightPart from '@/components/atoms/PageTitleHighlightPart.vue';
+import { formatRp } from '@/lib/formatters';
 defineOptions({
   layout: ApplicationLayout
 });
@@ -245,7 +246,7 @@ function deleteSku(skuId) {
               <td>{{ sku.sku }}</td>
               <td>{{ sku.item.name }}</td>
               <td>{{ sku.spesification_name }}</td>
-              <td>{{ sku.price }}</td>
+              <td>{{ formatRp(sku.price) }}</td>
               <td>{{ sku.quantity }} {{ sku.item?.base_measurement_unit?.name }}</td>
               <td>
                 <v-menu>

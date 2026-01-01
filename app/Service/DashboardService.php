@@ -30,7 +30,7 @@ class DashboardService
  
     /**
      * 
-     * @param  callable(\Illuminate\Support\Collection<int, TValue>, int): mixed  $callback
+     * @param  callable(\Illuminate\Support\Collection<int, \App\Models\Sku>, int): mixed  $callback
      */
     public function exportXlsx(callable $callback, ?Carbon $start, ?Carbon $end)
     {

@@ -1,7 +1,7 @@
 <script setup>
 import ApplicationLayout from '@/layouts/ApplicationLayout.vue';
 import { useForm } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
 defineOptions({
     layout: ApplicationLayout
@@ -20,9 +20,7 @@ const form = useForm({
     company_phone_number: props.settings?.company_phone_number || '',
 });
 
-// Ref untuk preview icon dan file input
 const iconPreview = ref(null);
-const fileInputRef = ref(null);
 
 // Set preview saat component mount jika ada icon
 onMounted(() => {
@@ -31,20 +29,18 @@ onMounted(() => {
     }
 });
 
+onUnmounted(() => {
+    URL.revokeObjectURL(iconPreview); // <- untuk menghindari memori leak
+})
+
 const handleFileChange = (event) => {
-    const files = event.target?.files || event;
-
-    if (files && files.length > 0) {
-        const file = files[0];
-        form.app_icon = file;
-
-        // Buat preview
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            iconPreview.value = e.target.result;
-        };
-        reader.readAsDataURL(file);
+    const file = event?.target?.files[0];
+    if (file == null || file == undefined) {
+        console.error("handle file change: file is null or undefined");
     }
+    URL.revokeObjectURL(iconPreview);
+    form.app_icon = file;
+    iconPreview.value = URL.createObjectURL(file);
 };
 
 const submit = () => {
@@ -66,7 +62,7 @@ const clearIcon = () => {
     iconPreview.value = props.settings?.app_icon
         ? (props.settings.app_icon.startsWith('http')
             ? props.settings.app_icon
-            : `/storage/${props.settings.app_icon}`)
+            : `${props.settings.app_icon}`)
         : null;
 };
 </script>
@@ -78,6 +74,22 @@ const clearIcon = () => {
             <v-card-text>
                 <form @submit.prevent="submit">
                     <v-row>
+                        <v-col cols="12" class="mt-2">
+                            <label for="icon" class="d-flex align-center justify-center gap-2">
+                                <input type="file" id="icon" @change="handleFileChange" accept="image/**" alt="app icon"
+                                    class="hidden" />
+                                <v-img v-if="iconPreview" :src="iconPreview" min-width="150" min-height="150"
+                                    max-width="150" max-height="150" class="rounded-full cursor-pointer" />
+                                <v-icon v-else icon="mdi-account-circle" size="175" />
+                                <v-btn v-if="form.app_icon" icon="mdi-close" size="small" variant="text"
+                                    @click="clearIcon" />
+                            </label>
+                            <div class="flex flex-col items-center">
+                                <p class="font-medium text-lg">Logo Aplikasi</p>
+                                <p class="text-xs text-gray-400">Klik untuk mengganti logo</p>
+                            </div>
+                        </v-col>
+
                         <v-col cols="12" md="6">
                             <v-text-field v-model="form.app_name" label="Nama Aplikasi" variant="outlined"
                                 :error-messages="form.errors.app_name"></v-text-field>
@@ -91,20 +103,6 @@ const clearIcon = () => {
                         <v-col cols="12" md="6">
                             <v-text-field v-model="form.company_phone_number" label="Nomer Telepon" type="tel"
                                 variant="outlined" :error-messages="form.errors.company_phone_number"></v-text-field>
-                        </v-col>
-
-                        <v-col cols="12" md="6">
-                            <v-file-input ref="fileInputRef" label="Icon" accept="image/*" variant="outlined"
-                                prepend-icon="" prepend-inner-icon="mdi-image" :error-messages="form.errors.app_icon"
-                                @change="handleFileChange"></v-file-input>
-
-                            <!-- Preview Icon -->
-                            <div v-if="iconPreview" class="mt-2 d-flex align-center gap-2">
-                                <v-img :src="iconPreview" max-width="100" max-height="100"
-                                    class="rounded border"></v-img>
-                                <v-btn v-if="form.app_icon" icon="mdi-close" size="small" variant="text"
-                                    @click="clearIcon"></v-btn>
-                            </div>
                         </v-col>
 
                         <v-col cols="12" md="6">
